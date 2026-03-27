@@ -1,0 +1,28 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python caches and local envs
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# R / RStudio local state
+.Rhistory
+.RData
+.Rproj.user/
+
+# Local scratch artifacts
+*.tmp
+*.temp
+
+# Root-level hidden files and directories
+/.*
+!/.gitignore
