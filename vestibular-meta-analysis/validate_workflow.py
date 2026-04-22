@@ -226,7 +226,15 @@ def source_of_value(primary: str, secondary: str, primary_name: str, secondary_n
 
 
 def normalize_etiology_value(value: str) -> str:
-    return normalize_lower(value)
+    ascii_text = unicodedata.normalize("NFKD", str(value)).encode("ascii", "ignore").decode("ascii")
+    return normalize_lower(ascii_text)
+
+
+def normalize_title_value(value: str) -> str:
+    ascii_text = unicodedata.normalize("NFKD", str(value)).encode("ascii", "ignore").decode("ascii")
+    ascii_text = ascii_text.replace("neuronitis", "neuritis")
+    ascii_text = ascii_text.replace('"', "'")
+    return normalize_lower(ascii_text)
 
 
 def derive_condition_normalized(etiology_clean: str, etiology_raw: str) -> str:
@@ -264,7 +272,13 @@ def derive_condition_normalized(etiology_clean: str, etiology_raw: str) -> str:
         return "Stroke or ischemic vestibular-circuit lesions"
     if any(token in etiology_clean for token in ["spaceflight", "microgravity", "astronaut"]):
         return "Spaceflight-related vestibular adaptation"
-    if any(token in etiology_clean for token in ["healthy adults", "healthy older", "healthy younger", "older adults", "younger adults", "aging"]):
+    if "healthy adults (balance training)" in etiology_clean or "balance training" in etiology_clean:
+        return "Healthy adults (balance training)"
+    if etiology_clean == "healthy young adults":
+        return "Healthy young adults"
+    if etiology_clean == "healthy adults":
+        return "Healthy adults"
+    if any(token in etiology_clean for token in ["healthy older", "healthy younger", "older adults", "younger adults", "aging"]):
         return "Healthy aging"
     return etiology_raw.strip() if has_value(etiology_raw) else "Unclassified or needs review"
 
@@ -301,6 +315,8 @@ def derive_review_group(condition_normalized: str) -> str:
         return "Stroke or ischemic vestibular-circuit lesions"
     if condition_normalized == "Professional ballet dancers":
         return "Vestibular experts"
+    if condition_normalized in {"Healthy adults", "Healthy adults (balance training)", "Healthy young adults"}:
+        return "Healthy non-clinical cohorts"
     if condition_normalized == "Healthy aging":
         return "Healthy aging"
     if condition_normalized == "Spaceflight-related vestibular adaptation":
@@ -311,8 +327,10 @@ def derive_review_group(condition_normalized: str) -> str:
 
 
 def derive_condition_family(condition_normalized: str, review_group: str) -> str:
-    if condition_normalized in {"Vestibular neuritis", "Peripheral vestibular dysfunction"}:
-        return "Unilateral peripheral vestibular syndromes"
+    if condition_normalized == "Vestibular neuritis":
+        return "Acute unilateral vestibular syndromes"
+    if condition_normalized == "Peripheral vestibular dysfunction":
+        return "Peripheral vestibular syndromes"
     if review_group == "Post-traumatic or concussive vestibulopathy":
         return "Concussion-related vestibulopathy"
     if condition_normalized in {"Bilateral vestibular loss", "Bilateral vestibular failure", "Bilateral vestibulopathy"}:
@@ -323,7 +341,7 @@ def derive_condition_family(condition_normalized: str, review_group: str) -> str
         return "Meniere's disease"
     if condition_normalized == "Persistent postural perceptual dizziness":
         return "Functional vestibular disorders"
-    if review_group in {"Vestibular experts", "Healthy aging", "Spaceflight-related vestibular adaptation"}:
+    if review_group in {"Vestibular experts", "Healthy non-clinical cohorts", "Healthy aging", "Spaceflight-related vestibular adaptation"}:
         return "Adaptive or non-clinical cohorts"
     if condition_normalized == "Vestibular migraine":
         return "Vestibular migraine"
@@ -332,14 +350,35 @@ def derive_condition_family(condition_normalized: str, review_group: str) -> str
     return review_group
 
 
-def derive_cohort_contrast(review_group: str, n_patients: str, n_controls: str) -> str:
+def derive_cohort_contrast(
+    review_group: str,
+    condition_normalized: str,
+    title: str,
+    subtype: str,
+    n_patients: str,
+    n_controls: str,
+) -> str:
     both_sample_sizes = has_value(n_patients) and has_value(n_controls)
+    title_clean = normalize_title_value(title)
+    subtype_clean = normalize_etiology_value(subtype)
     if review_group == "Vestibular experts":
         return "expertise_vs_control"
+    if condition_normalized == "Healthy adults (balance training)":
+        return "adaptation_or_exposure_comparison"
     if review_group == "Healthy aging":
         return "healthy_subgroup_comparison"
     if review_group == "Spaceflight-related vestibular adaptation":
         return "adaptation_or_exposure_comparison"
+    if review_group == "Healthy non-clinical cohorts":
+        return "unclear_or_nonstandard"
+    if condition_normalized == "Peripheral vestibular dysfunction":
+        return "within_clinical_subgroup_comparison"
+    if "voxel-based morphometry depicts central compensation after vestibular neuritis" in title_clean:
+        return "within_clinical_subgroup_comparison"
+    if any(token in subtype_clean for token in ["residual canal paresis", "subgroup"]):
+        return "within_clinical_subgroup_comparison"
+    if condition_normalized == "Unilateral vestibular deafferentation after vestibular schwannoma surgery" and not both_sample_sizes:
+        return "unclear_or_nonstandard"
     if both_sample_sizes:
         return "clinical_vs_control_style"
     return "unclear_or_nonstandard"
@@ -360,6 +399,9 @@ def derive_grouping_fields(row: dict[str, str]) -> None:
     row["Condition_Family"] = derive_condition_family(row["Condition_Normalized"], row["Review_Group"])
     row["Cohort_Contrast"] = derive_cohort_contrast(
         row["Review_Group"],
+        row["Condition_Normalized"],
+        row.get("Title", ""),
+        row.get("Subtype", ""),
         row.get("Sample_Size_Patients", ""),
         row.get("Sample_Size_Controls", ""),
     )

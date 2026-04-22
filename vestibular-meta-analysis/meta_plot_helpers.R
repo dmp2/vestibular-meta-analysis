@@ -168,7 +168,19 @@ attach_region_labels <- function(meta) {
 }
 
 normalize_etiology_value <- function(x) {
-  stringr::str_squish(stringr::str_to_lower(as.character(x)))
+  ascii <- iconv(as.character(x), from = "", to = "ASCII//TRANSLIT")
+  ascii[is.na(ascii)] <- as.character(x[is.na(ascii)])
+  stringr::str_squish(stringr::str_to_lower(ascii))
+}
+
+normalize_title_value <- function(x) {
+  ascii <- iconv(as.character(x), from = "", to = "ASCII//TRANSLIT")
+  ascii[is.na(ascii)] <- as.character(x[is.na(ascii)])
+  ascii %>%
+    stringr::str_replace_all("neuronitis", "neuritis") %>%
+    stringr::str_replace_all("[\"']", "'") %>%
+    stringr::str_squish() %>%
+    stringr::str_to_lower()
 }
 
 derive_condition_normalized <- function(etiology_clean, etiology_raw) {
@@ -183,14 +195,17 @@ derive_condition_normalized <- function(etiology_clean, etiology_raw) {
     stringr::str_detect(etiology_clean, "neurofibromatosis 2") ~ "NF2 bilateral vestibular loss after neurectomy",
     stringr::str_detect(etiology_clean, "acoustic neuroma surgery|acoustic neurinoma surgery|vestibular schwannoma removal") ~ "Unilateral vestibular deafferentation after vestibular schwannoma surgery",
     etiology_clean == "peripheral vestibular dysfunction" ~ "Peripheral vestibular dysfunction",
-    stringr::str_detect(etiology_clean, "méni|meni") ~ "Meniere's disease",
+    stringr::str_detect(etiology_clean, "meniere|meni") ~ "Meniere's disease",
     etiology_clean == "persistent postural perceptual dizziness" ~ "Persistent postural perceptual dizziness",
     etiology_clean == "long-term vestibular adaptation in professional ballet dancers" ~ "Professional ballet dancers",
     stringr::str_detect(etiology_clean, "vestibular migraine") ~ "Vestibular migraine",
     stringr::str_detect(etiology_clean, "small-vessel|small vessel|white matter disease") ~ "White matter disease or small-vessel lesions",
     stringr::str_detect(etiology_clean, "stroke|ischemi") ~ "Stroke or ischemic vestibular-circuit lesions",
     stringr::str_detect(etiology_clean, "spaceflight|microgravity|astronaut") ~ "Spaceflight-related vestibular adaptation",
-    stringr::str_detect(etiology_clean, "healthy adults|healthy older|healthy younger|older adults|younger adults|aging") ~ "Healthy aging",
+    stringr::str_detect(etiology_clean, "healthy adults \\(balance training\\)|balance training") ~ "Healthy adults (balance training)",
+    stringr::str_detect(etiology_clean, "^healthy young adults$") ~ "Healthy young adults",
+    stringr::str_detect(etiology_clean, "^healthy adults$") ~ "Healthy adults",
+    stringr::str_detect(etiology_clean, "healthy older|healthy younger|older adults|younger adults|aging") ~ "Healthy aging",
     TRUE ~ ifelse(has_value(etiology_raw), as.character(etiology_raw), "Unclassified or needs review")
   )
 }
@@ -218,6 +233,7 @@ derive_review_group <- function(condition_normalized) {
     condition_normalized == "White matter disease or small-vessel lesions" ~ "White matter disease or small-vessel lesions",
     condition_normalized == "Stroke or ischemic vestibular-circuit lesions" ~ "Stroke or ischemic vestibular-circuit lesions",
     condition_normalized == "Professional ballet dancers" ~ "Vestibular experts",
+    condition_normalized %in% c("Healthy adults", "Healthy adults (balance training)", "Healthy young adults") ~ "Healthy non-clinical cohorts",
     condition_normalized == "Healthy aging" ~ "Healthy aging",
     condition_normalized == "Spaceflight-related vestibular adaptation" ~ "Spaceflight-related vestibular adaptation",
     condition_normalized == "Persistent postural perceptual dizziness" ~ "Other vestibular clinical cohorts",
@@ -227,26 +243,35 @@ derive_review_group <- function(condition_normalized) {
 
 derive_condition_family <- function(condition_normalized, review_group) {
   dplyr::case_when(
-    condition_normalized %in% c("Vestibular neuritis", "Peripheral vestibular dysfunction") ~ "Unilateral peripheral vestibular syndromes",
+    condition_normalized == "Vestibular neuritis" ~ "Acute unilateral vestibular syndromes",
+    condition_normalized == "Peripheral vestibular dysfunction" ~ "Peripheral vestibular syndromes",
     review_group == "Post-traumatic or concussive vestibulopathy" ~ "Concussion-related vestibulopathy",
     condition_normalized %in% c("Bilateral vestibular loss", "Bilateral vestibular failure", "Bilateral vestibulopathy") ~ "Bilateral vestibular syndromes",
     review_group == "Vestibular schwannoma resection" ~ "Vestibular schwannoma resection or deafferentation",
     condition_normalized == "Meniere's disease" ~ "Meniere's disease",
     condition_normalized == "Persistent postural perceptual dizziness" ~ "Functional vestibular disorders",
-    review_group %in% c("Vestibular experts", "Healthy aging", "Spaceflight-related vestibular adaptation") ~ "Adaptive or non-clinical cohorts",
+    review_group %in% c("Vestibular experts", "Healthy non-clinical cohorts", "Healthy aging", "Spaceflight-related vestibular adaptation") ~ "Adaptive or non-clinical cohorts",
     condition_normalized == "Vestibular migraine" ~ "Vestibular migraine",
     review_group %in% c("White matter disease or small-vessel lesions", "Stroke or ischemic vestibular-circuit lesions") ~ "Central vascular or white-matter vestibular disorders",
     TRUE ~ review_group
   )
 }
 
-derive_cohort_contrast <- function(review_group, n_patients, n_controls) {
+derive_cohort_contrast <- function(review_group, condition_normalized, title, subtype, n_patients, n_controls) {
   both_sample_sizes <- has_value(n_patients) & has_value(n_controls)
+  title_clean <- normalize_title_value(title)
+  subtype_clean <- normalize_etiology_value(subtype)
 
   dplyr::case_when(
     review_group == "Vestibular experts" ~ "expertise_vs_control",
+    condition_normalized == "Healthy adults (balance training)" ~ "adaptation_or_exposure_comparison",
     review_group == "Healthy aging" ~ "healthy_subgroup_comparison",
     review_group == "Spaceflight-related vestibular adaptation" ~ "adaptation_or_exposure_comparison",
+    review_group == "Healthy non-clinical cohorts" ~ "unclear_or_nonstandard",
+    condition_normalized == "Peripheral vestibular dysfunction" ~ "within_clinical_subgroup_comparison",
+    stringr::str_detect(title_clean, "voxel-based morphometry depicts central compensation after vestibular neuritis") ~ "within_clinical_subgroup_comparison",
+    stringr::str_detect(subtype_clean, "residual canal paresis|subgroup") ~ "within_clinical_subgroup_comparison",
+    condition_normalized == "Unilateral vestibular deafferentation after vestibular schwannoma surgery" & !both_sample_sizes ~ "unclear_or_nonstandard",
     both_sample_sizes ~ "clinical_vs_control_style",
     TRUE ~ "unclear_or_nonstandard"
   )
@@ -259,7 +284,14 @@ derive_grouping_fields <- function(meta) {
       Condition_Normalized = derive_condition_normalized(Etiology_clean, Etiology),
       Review_Group = derive_review_group(Condition_Normalized),
       Condition_Family = derive_condition_family(Condition_Normalized, Review_Group),
-      Cohort_Contrast = derive_cohort_contrast(Review_Group, Sample_Size_Patients, Sample_Size_Controls)
+      Cohort_Contrast = derive_cohort_contrast(
+        Review_Group,
+        Condition_Normalized,
+        Title,
+        Subtype,
+        Sample_Size_Patients,
+        Sample_Size_Controls
+      )
     )
 }
 

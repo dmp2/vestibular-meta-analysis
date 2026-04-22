@@ -10,6 +10,13 @@ The current best-supported workflow is documented in [WORKFLOW_AUDIT.md](/c:/Use
 - Newer adaptation branch: top-level Python/R scripts in this folder
 - Reference-only originals: [`.ref`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/.ref)
 - Workflow audit generator: [`audit_workflow.py`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/audit_workflow.py)
+- Scientific grouping audit generator: [`audit_scientific_grouping.py`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/audit_scientific_grouping.py)
+- Scientific grouping spec: [`SCIENTIFIC_GROUPING_AUDIT.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/SCIENTIFIC_GROUPING_AUDIT.md)
+- Workbook review-frame crosswalk generator: [`audit_workbook_review_frame.py`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/audit_workbook_review_frame.py)
+- Workbook review-frame audit: [`WORKBOOK_REVIEW_FRAME_AUDIT.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/WORKBOOK_REVIEW_FRAME_AUDIT.md)
+- Workbook condition crosswalk: [`workbook_review_frame_crosswalk.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/workbook_review_frame_crosswalk.csv)
+- Study-level decision table: [`scientific_grouping_decisions.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/scientific_grouping_decisions.csv)
+- Raw-etiology mapping table: [`scientific_grouping_mapping.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/scientific_grouping_mapping.csv)
 - Runnable brain-plot entrypoint: [`brain_plots_master.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/brain_plots_master.R)
 - Stable brain-plot pipeline runner: [`run_brain_plot_pipeline.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/run_brain_plot_pipeline.R)
 - One-command brain-plot runbook: [`RUN_BRAIN_PLOTS.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/RUN_BRAIN_PLOTS.md)
@@ -54,6 +61,9 @@ Those legacy scripts established provenance. The new verified runnable replaceme
 - The student's `Congenital_or_Acquired` column is preserved for provenance, but the current secondary plot masters no longer use it as the scientific grouping variable.
 - Secondary plot grouping is now derived at runtime:
   funnel and Baujat use `Review_Group`, forest uses `Condition_Normalized`, and cohort-design signal is retained through `Cohort_Contrast`.
+- The branch now also contains a study-level scientific audit that defines the authoritative semantics of `Review_Group`, `Condition_Normalized`, `Cohort_Contrast`, and `Condition_Family` without overwriting the raw extraction tables.
+- The shared runtime helper in [`meta_plot_helpers.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/meta_plot_helpers.R) and the non-R validator in [`validate_workflow.py`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/validate_workflow.py) are aligned to that audit.
+- The original workbook review frame is now crosswalked against the checked-in scientific taxonomy in [`WORKBOOK_REVIEW_FRAME_AUDIT.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/WORKBOOK_REVIEW_FRAME_AUDIT.md), which is useful for auditing missing top-layer categories without changing the runtime grouping logic prematurely.
 
 ## Recommended Next Steps
 
@@ -70,6 +80,8 @@ Run:
 ```powershell
 python vestibular-meta-analysis/audit_workflow.py
 python vestibular-meta-analysis/validate_workflow.py
+python vestibular-meta-analysis/audit_scientific_grouping.py
+python vestibular-meta-analysis/audit_workbook_review_frame.py
 ```
 
 This refreshes:
@@ -77,7 +89,12 @@ This refreshes:
 - [`WORKFLOW_AUDIT.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/WORKFLOW_AUDIT.md)
 - [`audit_summary.json`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/audit_summary.json)
 - `validation_summary.json`
+- [`scientific_grouping_decisions.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/scientific_grouping_decisions.csv)
+- [`scientific_grouping_mapping.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/scientific_grouping_mapping.csv)
+- [`WORKBOOK_REVIEW_FRAME_AUDIT.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/WORKBOOK_REVIEW_FRAME_AUDIT.md)
+- [`workbook_review_frame_crosswalk.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/workbook_review_frame_crosswalk.csv)
 
 Use the audit for historical provenance and artifact-chain inspection. Use the validator for current runnable-state checks, dynamic secondary-plot eligibility, and expected grouped output names.
+Use the scientific grouping audit for the study-level semantics that should govern future code updates to the grouping logic.
 
 If you later want to turn this into a true git repository, initialize git at the workspace root after reviewing the workflow audit and deciding which outputs should be tracked versus regenerated.
