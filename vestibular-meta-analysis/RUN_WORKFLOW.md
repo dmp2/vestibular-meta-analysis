@@ -10,12 +10,17 @@ This step does not require R.
 python vestibular-meta-analysis/validate_workflow.py
 ```
 
+If `python` resolves to the broken WindowsApps shim on this machine, run the script with any real local interpreter instead.
+
 It checks:
 
 - required input files
 - required master scripts
 - expected output paths
 - row eligibility for compute, brain, funnel, Baujat, and forest stages
+- derived grouping fields for the current secondary-plot workflow
+
+It also writes `vestibular-meta-analysis/validation_summary.json`.
 
 ## 2. Compute Effect Sizes And Verified Brain Plots
 
@@ -52,6 +57,12 @@ Secondary-plot input policy:
 2. Recomputed [`mycode-11.24/output_with_g_computed.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv)
 3. Hybrid reconciliation in [`meta_plot_helpers.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/meta_plot_helpers.R)
 
+Current grouping policy:
+
+- funnel and Baujat: `Review_Group`
+- forest: `Condition_Normalized`
+- cohort-design preservation: `Cohort_Contrast`
+
 ## Required R Packages
 
 - `metafor`
@@ -66,6 +77,7 @@ Secondary-plot input policy:
 ## Current Data Reality
 
 - Brain plots have the strongest evidence and are the most trustworthy runnable branch.
-- Funnel and Baujat remain variance-limited and now skip ineligible groups instead of writing placeholders.
-- Forest plots use rows that have `Hedges_g_exact`, `CI_lower`, and `CI_upper`, so their eligibility is broader than funnel/Baujat eligibility.
-- The validator now reports which outputs should exist under the current hybrid secondary-plot rules.
+- The original student `Congenital_or_Acquired` split is preserved for provenance but is no longer used as the scientific grouping variable for secondary plots.
+- Funnel and Baujat remain variance-limited and now skip ineligible `Review_Group` subsets instead of writing placeholders.
+- Forest plots use rows that have `Hedges_g_exact`, `CI_lower`, and `CI_upper`, so their eligibility is broader than funnel/Baujat eligibility and is now reported by `Condition_Normalized`.
+- The validator reports which outputs should exist under the current hybrid grouped rules and retains possible control-vs-patient style signal through `Cohort_Contrast`.

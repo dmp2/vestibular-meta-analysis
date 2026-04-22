@@ -19,6 +19,7 @@ The current best-supported workflow is documented in [WORKFLOW_AUDIT.md](/c:/Use
 - Secondary meta-plot runbook: [`RUN_META_PLOTS.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/RUN_META_PLOTS.md)
 - Top-level execution runbook: [`RUN_WORKFLOW.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/RUN_WORKFLOW.md)
 - Non-R validation script: [`validate_workflow.py`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/validate_workflow.py)
+- Generated validator report: `validation_summary.json` after running the validator
 
 ## Verified Runnable Branch
 
@@ -50,6 +51,9 @@ Those legacy scripts established provenance. The new verified runnable replaceme
 - `output_final.csv` is not currently trusted as canonical because it appears to lose some populated values after the JSON merge step.
 - `jsonwithg.csv` now lives inside [`vestibular-meta-analysis`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis) and should still be treated as an auxiliary merge input rather than a trusted master table.
 - The top-level scripts are useful adaptations, but not yet confirmed as the scripts that originally produced the committed figures.
+- The student's `Congenital_or_Acquired` column is preserved for provenance, but the current secondary plot masters no longer use it as the scientific grouping variable.
+- Secondary plot grouping is now derived at runtime:
+  funnel and Baujat use `Review_Group`, forest uses `Condition_Normalized`, and cohort-design signal is retained through `Cohort_Contrast`.
 
 ## Recommended Next Steps
 
@@ -65,11 +69,15 @@ Run:
 
 ```powershell
 python vestibular-meta-analysis/audit_workflow.py
+python vestibular-meta-analysis/validate_workflow.py
 ```
 
 This refreshes:
 
 - [`WORKFLOW_AUDIT.md`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/WORKFLOW_AUDIT.md)
 - [`audit_summary.json`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/audit_summary.json)
+- `validation_summary.json`
+
+Use the audit for historical provenance and artifact-chain inspection. Use the validator for current runnable-state checks, dynamic secondary-plot eligibility, and expected grouped output names.
 
 If you later want to turn this into a true git repository, initialize git at the workspace root after reviewing the workflow audit and deciding which outputs should be tracked versus regenerated.

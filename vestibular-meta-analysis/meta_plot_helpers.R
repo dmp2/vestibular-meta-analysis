@@ -167,6 +167,115 @@ attach_region_labels <- function(meta) {
     dplyr::ungroup()
 }
 
+normalize_etiology_value <- function(x) {
+  stringr::str_squish(stringr::str_to_lower(as.character(x)))
+}
+
+derive_condition_normalized <- function(etiology_clean, etiology_raw) {
+  dplyr::case_when(
+    stringr::str_detect(etiology_clean, "acute unilateral peripheral vestibular neuritis|vestibular neuritis") ~ "Vestibular neuritis",
+    etiology_clean == "post-concussive vestibular dysfunction" ~ "Post-concussive vestibular dysfunction",
+    etiology_clean == "mild traumatic brain injury with vestibular symptoms" ~ "Mild traumatic brain injury with vestibular symptoms",
+    stringr::str_detect(etiology_clean, "sports-related concussion") ~ "Sports-related concussion with persistent post-concussive symptoms",
+    etiology_clean == "bilateral vestibular loss" ~ "Bilateral vestibular loss",
+    etiology_clean == "bilateral vestibular failure" ~ "Bilateral vestibular failure",
+    etiology_clean == "bilateral vestibulopathy" ~ "Bilateral vestibulopathy",
+    stringr::str_detect(etiology_clean, "neurofibromatosis 2") ~ "NF2 bilateral vestibular loss after neurectomy",
+    stringr::str_detect(etiology_clean, "acoustic neuroma surgery|acoustic neurinoma surgery|vestibular schwannoma removal") ~ "Unilateral vestibular deafferentation after vestibular schwannoma surgery",
+    etiology_clean == "peripheral vestibular dysfunction" ~ "Peripheral vestibular dysfunction",
+    stringr::str_detect(etiology_clean, "méni|meni") ~ "Meniere's disease",
+    etiology_clean == "persistent postural perceptual dizziness" ~ "Persistent postural perceptual dizziness",
+    etiology_clean == "long-term vestibular adaptation in professional ballet dancers" ~ "Professional ballet dancers",
+    stringr::str_detect(etiology_clean, "vestibular migraine") ~ "Vestibular migraine",
+    stringr::str_detect(etiology_clean, "small-vessel|small vessel|white matter disease") ~ "White matter disease or small-vessel lesions",
+    stringr::str_detect(etiology_clean, "stroke|ischemi") ~ "Stroke or ischemic vestibular-circuit lesions",
+    stringr::str_detect(etiology_clean, "spaceflight|microgravity|astronaut") ~ "Spaceflight-related vestibular adaptation",
+    stringr::str_detect(etiology_clean, "healthy adults|healthy older|healthy younger|older adults|younger adults|aging") ~ "Healthy aging",
+    TRUE ~ ifelse(has_value(etiology_raw), as.character(etiology_raw), "Unclassified or needs review")
+  )
+}
+
+derive_review_group <- function(condition_normalized) {
+  dplyr::case_when(
+    condition_normalized == "Vestibular neuritis" ~ "Unilateral vestibular loss or deafferentation",
+    condition_normalized %in% c(
+      "Post-concussive vestibular dysfunction",
+      "Mild traumatic brain injury with vestibular symptoms",
+      "Sports-related concussion with persistent post-concussive symptoms"
+    ) ~ "Post-traumatic or concussive vestibulopathy",
+    condition_normalized %in% c(
+      "Bilateral vestibular loss",
+      "Bilateral vestibular failure",
+      "Bilateral vestibulopathy"
+    ) ~ "Bilateral vestibulopathy",
+    condition_normalized %in% c(
+      "NF2 bilateral vestibular loss after neurectomy",
+      "Unilateral vestibular deafferentation after vestibular schwannoma surgery"
+    ) ~ "Vestibular schwannoma resection",
+    condition_normalized == "Peripheral vestibular dysfunction" ~ "Chronic or mild vestibulopathy",
+    condition_normalized == "Meniere's disease" ~ "Meniere's disease",
+    condition_normalized == "Vestibular migraine" ~ "Vestibular migraine",
+    condition_normalized == "White matter disease or small-vessel lesions" ~ "White matter disease or small-vessel lesions",
+    condition_normalized == "Stroke or ischemic vestibular-circuit lesions" ~ "Stroke or ischemic vestibular-circuit lesions",
+    condition_normalized == "Professional ballet dancers" ~ "Vestibular experts",
+    condition_normalized == "Healthy aging" ~ "Healthy aging",
+    condition_normalized == "Spaceflight-related vestibular adaptation" ~ "Spaceflight-related vestibular adaptation",
+    condition_normalized == "Persistent postural perceptual dizziness" ~ "Other vestibular clinical cohorts",
+    TRUE ~ "Unclassified or needs review"
+  )
+}
+
+derive_condition_family <- function(condition_normalized, review_group) {
+  dplyr::case_when(
+    condition_normalized %in% c("Vestibular neuritis", "Peripheral vestibular dysfunction") ~ "Unilateral peripheral vestibular syndromes",
+    review_group == "Post-traumatic or concussive vestibulopathy" ~ "Concussion-related vestibulopathy",
+    condition_normalized %in% c("Bilateral vestibular loss", "Bilateral vestibular failure", "Bilateral vestibulopathy") ~ "Bilateral vestibular syndromes",
+    review_group == "Vestibular schwannoma resection" ~ "Vestibular schwannoma resection or deafferentation",
+    condition_normalized == "Meniere's disease" ~ "Meniere's disease",
+    condition_normalized == "Persistent postural perceptual dizziness" ~ "Functional vestibular disorders",
+    review_group %in% c("Vestibular experts", "Healthy aging", "Spaceflight-related vestibular adaptation") ~ "Adaptive or non-clinical cohorts",
+    condition_normalized == "Vestibular migraine" ~ "Vestibular migraine",
+    review_group %in% c("White matter disease or small-vessel lesions", "Stroke or ischemic vestibular-circuit lesions") ~ "Central vascular or white-matter vestibular disorders",
+    TRUE ~ review_group
+  )
+}
+
+derive_cohort_contrast <- function(review_group, n_patients, n_controls) {
+  both_sample_sizes <- has_value(n_patients) & has_value(n_controls)
+
+  dplyr::case_when(
+    review_group == "Vestibular experts" ~ "expertise_vs_control",
+    review_group == "Healthy aging" ~ "healthy_subgroup_comparison",
+    review_group == "Spaceflight-related vestibular adaptation" ~ "adaptation_or_exposure_comparison",
+    both_sample_sizes ~ "clinical_vs_control_style",
+    TRUE ~ "unclear_or_nonstandard"
+  )
+}
+
+derive_grouping_fields <- function(meta) {
+  meta %>%
+    dplyr::mutate(
+      Etiology_clean = normalize_etiology_value(Etiology),
+      Condition_Normalized = derive_condition_normalized(Etiology_clean, Etiology),
+      Review_Group = derive_review_group(Condition_Normalized),
+      Condition_Family = derive_condition_family(Condition_Normalized, Review_Group),
+      Cohort_Contrast = derive_cohort_contrast(Review_Group, Sample_Size_Patients, Sample_Size_Controls)
+    )
+}
+
+safe_slug <- function(x) {
+  ascii <- iconv(as.character(x), from = "", to = "ASCII//TRANSLIT")
+  ascii[is.na(ascii)] <- as.character(x[is.na(ascii)])
+  slug <- gsub("[^a-z0-9]+", "_", tolower(ascii))
+  gsub("(^_+|_+$)", "", slug)
+}
+
+available_group_values <- function(meta, group_field) {
+  values <- meta[[group_field]]
+  values <- values[has_value(values)]
+  sort(unique(as.character(values)))
+}
+
 read_meta_table <- function(path, source_name) {
   if (!file.exists(path)) {
     stop("Missing ", source_name, " input file: ", path)
@@ -316,6 +425,7 @@ load_secondary_plot_meta <- function(root_dir = get_script_dir(), input_policy =
         stringr::str_squish(stringr::str_to_lower(ROI_Homogenized))
       )
     ) %>%
+    derive_grouping_fields() %>%
     attach_region_labels()
 }
 
@@ -352,7 +462,66 @@ subset_meta_region <- function(meta, etio, region_type, require_variance = FALSE
   dat
 }
 
-summarize_plot_eligibility <- function(meta) {
+subset_meta_group <- function(meta, group_field, group_value, region_type = NULL, require_variance = FALSE, require_ci = FALSE) {
+  dat <- meta %>%
+    dplyr::filter(
+      .data[[group_field]] == group_value,
+      has_value(Hedges_g_exact)
+    )
+
+  if (!is.null(region_type)) {
+    if (region_type == "cortex") {
+      dat <- dat %>% dplyr::filter(!is.na(dk_region))
+    } else {
+      dat <- dat %>% dplyr::filter(!is.na(sub_label))
+    }
+  }
+
+  if (require_variance) {
+    dat <- dat %>% dplyr::filter(has_value(Hedges_g_variance))
+  }
+
+  if (require_ci) {
+    dat <- dat %>% dplyr::filter(has_value(CI_lower), has_value(CI_upper))
+  }
+
+  dat
+}
+
+summarize_plot_eligibility <- function(meta, group_field = "Congenital_or_Acquired") {
+  groups <- available_group_values(meta, group_field)
+  region_types <- c("cortex", "subcortex")
+
+  if (length(groups) == 0) {
+    return(tibble::tibble(
+      group_field = character(0),
+      group_value = character(0),
+      region_type = character(0),
+      rows_effect = integer(0),
+      rows_variance = integer(0),
+      rows_ci = integer(0)
+    ))
+  }
+
+  dplyr::bind_rows(lapply(groups, function(group_value) {
+    dplyr::bind_rows(lapply(region_types, function(region_type) {
+      base <- subset_meta_group(meta, group_field, group_value, region_type = region_type)
+      variance <- subset_meta_group(meta, group_field, group_value, region_type = region_type, require_variance = TRUE)
+      ci <- subset_meta_group(meta, group_field, group_value, region_type = region_type, require_ci = TRUE)
+
+      tibble::tibble(
+        group_field = group_field,
+        group_value = group_value,
+        region_type = region_type,
+        rows_effect = nrow(base),
+        rows_variance = nrow(variance),
+        rows_ci = nrow(ci)
+      )
+    }))
+  }))
+}
+
+summarize_legacy_plot_eligibility <- function(meta) {
   specs <- tibble::tribble(
     ~etio,        ~region_type,
     "acquired",   "cortex",
@@ -379,19 +548,32 @@ summarize_plot_eligibility <- function(meta) {
   }))
 }
 
-forest_group_eligibility <- function(meta) {
-  dplyr::bind_rows(lapply(c("acquired", "congenital"), function(etio) {
+forest_group_eligibility <- function(meta, group_field = "Condition_Normalized") {
+  groups <- available_group_values(meta, group_field)
+
+  if (length(groups) == 0) {
+    return(tibble::tibble(
+      group_field = character(0),
+      group_value = character(0),
+      rows_ci = integer(0),
+      cohort_contrast = character(0)
+    ))
+  }
+
+  dplyr::bind_rows(lapply(groups, function(group_value) {
     dat <- meta %>%
       dplyr::filter(
-        Congenital_or_Acquired == etio,
+        .data[[group_field]] == group_value,
         has_value(Hedges_g_exact),
         has_value(CI_lower),
         has_value(CI_upper)
       )
 
     tibble::tibble(
-      etio = etio,
-      rows_ci = nrow(dat)
+      group_field = group_field,
+      group_value = group_value,
+      rows_ci = nrow(dat),
+      cohort_contrast = if (nrow(dat) > 0) dat$Cohort_Contrast[[1]] else NA_character_
     )
   }))
 }

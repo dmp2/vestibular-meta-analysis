@@ -37,6 +37,8 @@ if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 }
 
+group_field <- "Condition_Normalized"
+
 display_text <- function(x, fallback = "") {
   ifelse(has_value(x), trimws(as.character(x)), fallback)
 }
@@ -99,10 +101,10 @@ order_side_rows <- function(dat) {
     mutate(row_id = rev(seq_len(n())))
 }
 
-prepare_forest_rows <- function(meta, etio) {
+prepare_forest_rows <- function(meta, group_field, group_value) {
   dat <- meta %>%
     filter(
-      Congenital_or_Acquired == etio,
+      .data[[group_field]] == group_value,
       has_value(Hedges_g_exact),
       has_value(CI_lower),
       has_value(CI_upper)
@@ -122,12 +124,7 @@ prepare_forest_rows <- function(meta, etio) {
       Estimate_label = sprintf("%.2f [%.2f, %.2f]", Hedges_g_exact, CI_lower, CI_upper)
     )
 
-  ordered <- order_side_rows(dat)
-  if (nrow(ordered) == 0) {
-    return(ordered)
-  }
-
-  ordered
+  order_side_rows(dat)
 }
 
 base_text_theme <- function(n_rows) {
@@ -185,12 +182,16 @@ make_forest_panel <- function(dat, title) {
     )
 }
 
-make_forest_plot <- function(meta, etio) {
-  dat <- prepare_forest_rows(meta, etio)
+make_forest_plot <- function(meta, group_field, group_value) {
+  dat <- prepare_forest_rows(meta, group_field, group_value)
   if (nrow(dat) == 0) {
-    message("Skipping forest plot for ", etio, ": no effect rows with confidence intervals in the reconciled table")
+    message("Skipping forest plot for ", group_value, ": no effect rows with confidence intervals in the reconciled table")
     return(invisible(NULL))
   }
+
+  group_rows <- meta %>% filter(.data[[group_field]] == group_value)
+  review_group <- if (nrow(group_rows) > 0) group_rows$Review_Group[[1]] else "NA"
+  cohort_contrast <- if (nrow(group_rows) > 0) group_rows$Cohort_Contrast[[1]] else "NA"
 
   study_col <- make_text_column(dat, "Study", "Study")
   roi_col <- make_text_column(dat, "ROI_label", "ROI")
@@ -203,15 +204,18 @@ make_forest_plot <- function(meta, etio) {
   composed <- study_col + roi_col + area_col + side_col + n_col + forest_col + est_col +
     patchwork::plot_layout(widths = c(1.5, 1.6, 1.0, 0.8, 0.9, 1.8, 1.6)) +
     patchwork::plot_annotation(
-      title = paste("Forest Plot (", stringr::str_to_title(etio), ")", sep = ""),
-      subtitle = "Hybrid secondary-plot table; rows require Hedges g with confidence intervals",
+      title = paste("Forest Plot (", group_value, ")", sep = ""),
+      subtitle = paste0("Review group: ", review_group, " | Contrast: ", cohort_contrast),
       theme = theme(
         plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
         plot.subtitle = element_text(hjust = 0.5, size = 10)
       )
     )
 
-  file_stub <- file.path(output_dir, paste0("forest_", etio))
+  file_stub <- file.path(
+    output_dir,
+    paste0("forest_", safe_slug(group_field), "_", safe_slug(group_value))
+  )
   width_in <- 15
   height_in <- max(4.5, 0.28 * nrow(dat) + 1.8)
 
@@ -239,12 +243,13 @@ make_forest_plot <- function(meta, etio) {
 
 meta <- load_secondary_plot_meta(root_dir, input_policy = "hybrid")
 
-eligibility <- forest_group_eligibility(meta)
+eligibility <- forest_group_eligibility(meta, group_field = group_field)
 message("Forest-plot eligibility summary:")
 print(eligibility)
 
-for (etio in c("acquired", "congenital")) {
-  make_forest_plot(meta, etio)
+eligible_groups <- eligibility %>% filter(rows_ci > 0) %>% pull(group_value)
+for (group_value in eligible_groups) {
+  make_forest_plot(meta, group_field, group_value)
 }
 
 message("Finished forest plots.")

@@ -34,33 +34,31 @@ root_dir <- get_script_dir()
 output_dir <- meta_output_dir(root_dir)
 meta <- load_secondary_plot_meta(root_dir, input_policy = "hybrid")
 
-plot_specs <- tibble::tribble(
-  ~etio,        ~region_type, ~filename,
-  "acquired",   "cortex",     "baujat_acquired_cortex.png",
-  "acquired",   "subcortex",  "baujat_acquired_subcortex.png",
-  "congenital", "cortex",     "baujat_congenital_cortex.png",
-  "congenital", "subcortex",  "baujat_congenital_subcortex.png"
-)
+group_field <- "Review_Group"
+region_types <- c("cortex", "subcortex")
 
-describe_skip <- function(etio, region_type, reason) {
-  message("Skipping Baujat plot for ", etio, " / ", region_type, ": ", reason)
+describe_skip <- function(group_value, region_type, reason) {
+  message("Skipping Baujat plot for ", group_value, " / ", region_type, ": ", reason)
 }
 
-make_baujat_plot <- function(meta, etio, region_type, out_file) {
+make_baujat_plot <- function(meta, group_field, group_value, region_type) {
   title <- paste(
     "Baujat plot -",
-    stringr::str_to_title(etio),
+    group_value,
     ifelse(region_type == "cortex", "cortex", "subcortex + cerebellum")
   )
-  path <- file.path(output_dir, out_file)
+  path <- file.path(
+    output_dir,
+    paste0("baujat_", safe_slug(group_field), "_", safe_slug(group_value), "_", region_type, ".png")
+  )
 
-  base_dat <- subset_meta_region(meta, etio, region_type)
+  base_dat <- subset_meta_group(meta, group_field, group_value, region_type = region_type)
   if (nrow(base_dat) == 0) {
-    describe_skip(etio, region_type, "no eligible effect-size rows in the reconciled table")
+    describe_skip(group_value, region_type, "no eligible effect-size rows in the reconciled table")
     return(invisible(NULL))
   }
 
-  dat <- subset_meta_region(meta, etio, region_type, require_variance = TRUE) %>%
+  dat <- subset_meta_group(meta, group_field, group_value, region_type = region_type, require_variance = TRUE) %>%
     mutate(
       Hedges_g_exact = as.numeric(Hedges_g_exact),
       Hedges_g_variance = as.numeric(Hedges_g_variance)
@@ -70,12 +68,12 @@ make_baujat_plot <- function(meta, etio, region_type, out_file) {
 
   k <- nrow(dat)
   if (k == 0) {
-    describe_skip(etio, region_type, "no effect sizes with variance available after reconciliation")
+    describe_skip(group_value, region_type, "no effect sizes with variance available after reconciliation")
     return(invisible(NULL))
   }
 
   if (k < 2) {
-    describe_skip(etio, region_type, paste0("need at least 2 variance-eligible rows, found k = ", k))
+    describe_skip(group_value, region_type, paste0("need at least 2 variance-eligible rows, found k = ", k))
     return(invisible(NULL))
   }
 
@@ -91,7 +89,7 @@ make_baujat_plot <- function(meta, etio, region_type, out_file) {
   )
 
   if (inherits(fit, "error")) {
-    describe_skip(etio, region_type, paste0("model fit failed: ", fit$message))
+    describe_skip(group_value, region_type, paste0("model fit failed: ", fit$message))
     return(invisible(NULL))
   }
 
@@ -115,19 +113,21 @@ make_baujat_plot <- function(meta, etio, region_type, out_file) {
   })
 
   if (inherits(plot_result, "error")) {
-    describe_skip(etio, region_type, paste0("Baujat plotting failed: ", plot_result$message))
+    describe_skip(group_value, region_type, paste0("Baujat plotting failed: ", plot_result$message))
     return(invisible(NULL))
   }
 
   message("Saved ", path)
 }
 
-eligibility <- summarize_plot_eligibility(meta)
+eligibility <- summarize_plot_eligibility(meta, group_field = group_field)
 message("Secondary-plot eligibility summary:")
 print(eligibility)
 
-for (i in seq_len(nrow(plot_specs))) {
-  make_baujat_plot(meta, plot_specs$etio[i], plot_specs$region_type[i], plot_specs$filename[i])
+for (group_value in available_group_values(meta, group_field)) {
+  for (region_type in region_types) {
+    make_baujat_plot(meta, group_field, group_value, region_type)
+  }
 }
 
 message("Finished Baujat plots.")
