@@ -26,7 +26,7 @@ get_script_dir <- function() {
 
 SCRIPT_DIR <- get_script_dir()
 input_file <- file.path(SCRIPT_DIR, "output.csv")
-output_file <- file.path(SCRIPT_DIR, "output_with_g.csv")
+output_file <- file.path(SCRIPT_DIR, "output_with_g_computed.csv")
 
 if (!file.exists(input_file)) {
   stop("Missing input file: ", input_file)

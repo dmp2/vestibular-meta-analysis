@@ -6,11 +6,13 @@ This runbook is for the stable verified acquired brain-plot pipeline.
 
 1. [`mycode-11.24/output.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output.csv)
 2. [`mycode-11.24/compute_hedges_g.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/compute_hedges_g.R)
-3. [`brain_plots_master.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/brain_plots_master.R)
+3. [`mycode-11.24/output_with_g_computed.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv)
+4. [`brain_plots_master.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/brain_plots_master.R)
 
-## Canonical Analysis Table
+## Tables
 
-- Generated intermediate and standard plotting input: [`mycode-11.24/output_with_g.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g.csv)
+- Preserved historical table: [`mycode-11.24/output_with_g.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g.csv)
+- Generated rerun table used by the stable brain pipeline: [`mycode-11.24/output_with_g_computed.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv)
 
 ## One Command
 
@@ -32,6 +34,13 @@ The script writes these verified PNGs into [`mycode-11.24`](/c:/Users/dpado/Docu
 - [`acquired_right_medial_DK.png`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/acquired_right_medial_DK.png)
 - [`acquired_subcortex_cerebellum_ASEG.png`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/acquired_subcortex_cerebellum_ASEG.png)
 
+## Verification Status
+
+- The pipeline has been rerun successfully in RStudio from the repo root with repo-relative paths.
+- The cortical branch now uses a manual atlas join for stable rendering.
+- The only warning on the clean rerun was package build-version notices such as `package 'dplyr' was built under R version 4.5.3`.
+- The single ASEG console line `Merging atlas and data by label.` is expected for the remaining subcortical plotting path and did not block output generation.
+
 ## Required R Packages
 
 - `dplyr`
@@ -45,6 +54,7 @@ The script writes these verified PNGs into [`mycode-11.24`](/c:/Users/dpado/Docu
 ## Notes
 
 - The pipeline is repo-relative and does not depend on the original desktop paths in the older scripts.
-- [`compute_hedges_g.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/compute_hedges_g.R) now runs against repo-local `output.csv` and writes repo-local `output_with_g.csv`.
-- [`brain_plots_master.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/brain_plots_master.R) standardizes on `output_with_g.csv` and does not use `output_final.csv`.
+- [`compute_hedges_g.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/compute_hedges_g.R) now runs against repo-local `output.csv` and writes repo-local `output_with_g_computed.csv`.
+- [`brain_plots_master.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/brain_plots_master.R) is overridable and the stable pipeline points it at `output_with_g_computed.csv`.
+- The historical [`output_with_g.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g.csv) is preserved instead of being overwritten.
 - The legacy plotting scripts remain useful as provenance, but the pipeline runner and master script are the new runnable entrypoints.

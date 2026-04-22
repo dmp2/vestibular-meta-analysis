@@ -337,15 +337,11 @@
         "output_with_g.csv"
       ],
       "declared_paths": {
-        "declared_inputs": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output.csv"
-        ],
-        "declared_output_vars": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output_with_g.csv"
-        ],
+        "declared_inputs": [],
+        "declared_output_vars": [],
         "mentioned_output_like_names": [
           "output.csv",
-          "output_with_g.csv"
+          "output_with_g_computed.csv"
         ]
       }
     },

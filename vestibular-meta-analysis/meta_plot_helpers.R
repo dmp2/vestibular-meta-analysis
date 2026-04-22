@@ -6,7 +6,13 @@ get_script_dir <- function() {
   frames <- sys.frames()
   for (i in rev(seq_along(frames))) {
     if (!is.null(frames[[i]]$ofile)) {
-      return(dirname(normalizePath(frames[[i]]$ofile)))
+      ofile <- frames[[i]]$ofile
+      if (file.exists(ofile)) {
+        return(dirname(normalizePath(ofile)))
+      }
+      if (file.exists(file.path(getwd(), basename(ofile)))) {
+        return(normalizePath(getwd()))
+      }
     }
   }
   args <- commandArgs(trailingOnly = FALSE)

@@ -23,6 +23,7 @@ legacy_dir <- file.path(ROOT_DIR, "mycode-11.24")
 compute_script <- file.path(legacy_dir, "compute_hedges_g.R")
 brain_script <- file.path(ROOT_DIR, "brain_plots_master.R")
 input_csv <- file.path(legacy_dir, "output.csv")
+computed_csv <- file.path(legacy_dir, "output_with_g_computed.csv")
 
 if (!file.exists(input_csv)) {
   stop("Missing upstream input file: ", input_csv)
@@ -40,6 +41,8 @@ message("Stage 1: compute Hedges g from ", input_csv)
 source(compute_script, local = new.env(parent = globalenv()))
 
 message("Stage 2: generate verified acquired brain plots")
-source(brain_script, local = new.env(parent = globalenv()))
+brain_env <- new.env(parent = globalenv())
+brain_env$BRAIN_META_INPUT <- computed_csv
+source(brain_script, local = brain_env)
 
 message("Finished stable brain-plot pipeline.")
