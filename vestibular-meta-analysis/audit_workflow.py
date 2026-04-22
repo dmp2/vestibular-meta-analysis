@@ -5,8 +5,6 @@ from __future__ import annotations
 
 import csv
 import json
-import re
-from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -33,11 +31,70 @@ CSV_KEY_COLUMNS = [
 TRACKED_CSVS = {
     "top_output": ROOT / "output.csv",
     "legacy_output": ROOT / "mycode-11.24" / "output.csv",
-    "legacy_output_with_g": ROOT / "mycode-11.24" / "output_with_g.csv",
+    "historical_output_with_g": ROOT / "mycode-11.24" / "output_with_g.csv",
+    "computed_output_with_g": ROOT / "mycode-11.24" / "output_with_g_computed.csv",
     "legacy_output_final": ROOT / "mycode-11.24" / "output_final.csv",
     "root_jsonwithg": ROOT / "jsonwithg.csv",
     "legacy_jsonwithg": ROOT / "mycode-11.24" / "jsonwithg.csv",
 }
+
+
+DK_PATTERNS = [
+    "anterior cingulate cortex",
+    "cingulate gyrus",
+    "cuneus",
+    "fusiform gyrus",
+    "fusiform",
+    "insula",
+    "intracalcarine cortex",
+    "intracalcarine",
+    "lingual gyrus",
+    "lateral occipital cortex",
+    "lateral occipital",
+    "middle frontal gyrus",
+    "middle temporal gyrus (mt/v5)",
+    "middle temporal visual area (mt/v5)",
+    "middle temporal gyrus",
+    "mt/v5",
+    "postcentral gyrus",
+    "precentral gyrus",
+    "precuneus / superior parietal white matter",
+    "precuneus",
+    "superior frontal gyrus",
+    "superior orbitofrontal cortex",
+    "superior orbitofrontal",
+    "orbital gyrus",
+    "superior temporal gyrus",
+    "primary somatosensory cortex",
+    "supramarginal gyrus",
+]
+
+
+SUB_PATTERNS = [
+    "hippocampus",
+    "parahippocamp",
+    "presubiculum",
+    "amygdala",
+    "caudate",
+    "putamen",
+    "pallid",
+    "accumb",
+    "thalam",
+    "brainstem",
+    "pons",
+    "mesencephalon",
+    "midbrain",
+    "pontomesencephalic",
+    "vestibular nuclei",
+    "gracile nucleus",
+    "cerebell",
+    "vermi",
+    "culmen",
+    "peduncle",
+    "inferior semi-lunar lobule",
+    "crus i",
+    "lobule vi",
+]
 
 
 SCRIPT_CATALOG = [
@@ -45,8 +102,73 @@ SCRIPT_CATALOG = [
         "path": ROOT / "mycode-11.24" / "compute_hedges_g.R",
         "role": "core_stage",
         "status": "produced by script",
-        "notes": "Reads output.csv and writes output_with_g.csv.",
-        "expected_outputs": ["output_with_g.csv"],
+        "notes": "Stable repo-relative compute stage. Reads output.csv and writes output_with_g_computed.csv.",
+        "expected_outputs": ["output_with_g_computed.csv"],
+    },
+    {
+        "path": ROOT / "run_brain_plot_pipeline.R",
+        "role": "verified_pipeline",
+        "status": "produced by script",
+        "notes": "Verified one-command brain runner: output.csv -> compute_hedges_g.R -> output_with_g_computed.csv -> brain_plots_master.R.",
+        "expected_outputs": [],
+    },
+    {
+        "path": ROOT / "brain_plots_master.R",
+        "role": "verified_pipeline",
+        "status": "produced by script",
+        "notes": "Repo-relative replacement for the acquired brain-plot branch. Matches the committed acquired brain outputs.",
+        "expected_outputs": [
+            "brain_acquired_DK2.png",
+            "brainpanel_acquired_DK_cortex_only.png",
+            "acquired_left_lateral_DK.png",
+            "acquired_left_medial_DK.png",
+            "acquired_right_lateral_DK.png",
+            "acquired_right_medial_DK.png",
+            "acquired_subcortex_cerebellum_ASEG.png",
+        ],
+    },
+    {
+        "path": ROOT / "meta_plot_helpers.R",
+        "role": "helper",
+        "status": "produced by script",
+        "notes": "Hybrid secondary-plot reconciliation layer. Preserves historical variance/CI values and falls back to recomputed effect sizes by composite key.",
+        "expected_outputs": [],
+    },
+    {
+        "path": ROOT / "funnel_plots_master.R",
+        "role": "verified_pipeline",
+        "status": "produced by script",
+        "notes": "Repo-relative funnel master using the hybrid secondary-plot table and REML. Saves only variance-eligible groups.",
+        "expected_outputs": [
+            "funnel_acquired_cortex.png",
+            "funnel_acquired_subcortex.png",
+            "funnel_congenital_cortex.png",
+            "funnel_congenital_subcortex.png",
+        ],
+    },
+    {
+        "path": ROOT / "baujat_plots_master.R",
+        "role": "verified_pipeline",
+        "status": "produced by script",
+        "notes": "Repo-relative Baujat master using the hybrid secondary-plot table and REML. Saves only variance-eligible groups.",
+        "expected_outputs": [
+            "baujat_acquired_cortex.png",
+            "baujat_acquired_subcortex.png",
+            "baujat_congenital_cortex.png",
+            "baujat_congenital_subcortex.png",
+        ],
+    },
+    {
+        "path": ROOT / "forest_plots_master.R",
+        "role": "verified_pipeline",
+        "status": "produced by script",
+        "notes": "Repo-relative forest master using the hybrid secondary-plot table. Saves etiologies that have Hedges g plus confidence bounds.",
+        "expected_outputs": [
+            "forest/forest_acquired.png",
+            "forest/forest_acquired.svg",
+            "forest/forest_congenital.png",
+            "forest/forest_congenital.svg",
+        ],
     },
     {
         "path": ROOT / "mycode-11.24" / "merge_json_into_master.R",
@@ -57,23 +179,23 @@ SCRIPT_CATALOG = [
     },
     {
         "path": ROOT / "mycode-11.24" / "Brainsurfacemaps.r",
-        "role": "figure",
+        "role": "historical_figure",
         "status": "produced by script",
-        "notes": "Creates acquired cortical DK map from output_with_g.csv.",
+        "notes": "Historical acquired cortical DK map script using output_with_g.csv.",
         "expected_outputs": ["brain_acquired_DK2.png"],
     },
     {
         "path": ROOT / "mycode-11.24" / "brainonlydk.R",
-        "role": "figure",
+        "role": "historical_figure",
         "status": "produced by script",
-        "notes": "Creates combined cortex-only DK panel.",
+        "notes": "Historical combined cortex-only DK panel script.",
         "expected_outputs": ["brainpanel_acquired_DK_cortex_only.png"],
     },
     {
         "path": ROOT / "mycode-11.24" / "braint3.R",
-        "role": "figure",
+        "role": "historical_figure",
         "status": "produced by script",
-        "notes": "Creates four cortical hemisphere views plus one subcortex/cerebellum PNG.",
+        "notes": "Historical acquired cortical hemisphere views plus subcortex/cerebellum figure script.",
         "expected_outputs": [
             "acquired_left_lateral_DK.png",
             "acquired_left_medial_DK.png",
@@ -84,23 +206,23 @@ SCRIPT_CATALOG = [
     },
     {
         "path": ROOT / "mycode-11.24" / "braint2.R",
-        "role": "figure",
+        "role": "historical_figure",
         "status": "possibly produced by script",
         "notes": "Configured to create brainpanel_acquired_DK_ASEG.png, but that output is not currently present.",
         "expected_outputs": ["brainpanel_acquired_DK_ASEG.png"],
     },
     {
         "path": ROOT / "mycode-11.24" / "funnel.r",
-        "role": "figure",
+        "role": "reference_baseline",
         "status": "possibly produced by script",
-        "notes": "Generates etiology-based funnel plots from output_with_g.csv, but no matching funnel PNGs are present locally.",
+        "notes": "Older etiology-based funnel script retained as reference only.",
         "expected_outputs": [],
     },
     {
         "path": ROOT / "mycode-11.24" / "funnelt2.R",
-        "role": "figure",
+        "role": "reference_baseline",
         "status": "possibly produced by script",
-        "notes": "Generates four region-specific funnel plots, but no matching outputs are present locally.",
+        "notes": "Older four-panel funnel script that informed the current funnel master.",
         "expected_outputs": [
             "funnel_acquired_cortex.png",
             "funnel_acquired_subcortex.png",
@@ -110,9 +232,9 @@ SCRIPT_CATALOG = [
     },
     {
         "path": ROOT / "mycode-11.24" / "forest.py",
-        "role": "figure",
+        "role": "reference_baseline",
         "status": "not attributable from current evidence",
-        "notes": "Template script with placeholder paths. No local forest outputs are present.",
+        "notes": "Template Python forest script with non-local paths. Conceptual reference only.",
         "expected_outputs": [],
     },
     {
@@ -153,13 +275,8 @@ SCRIPT_CATALOG = [
 ]
 
 
-@dataclass
-class CsvSummary:
-    path: str
-    exists: bool
-    rows: int = 0
-    columns: int = 0
-    non_null_counts: dict[str, int] | None = None
+def relpath(path: Path) -> str:
+    return path.relative_to(REPO_ROOT).as_posix()
 
 
 def read_csv_rows(path: Path) -> list[dict[str, str]]:
@@ -167,35 +284,68 @@ def read_csv_rows(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
-def summarize_csv(path: Path) -> CsvSummary:
+def clean(value: str | None) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if text.lower() in {"", "na", "nan"}:
+        return ""
+    return text
+
+
+def has_value(value: str | None) -> bool:
+    return clean(value) != ""
+
+
+def has_float(value: str | None) -> bool:
+    text = clean(value)
+    if not text:
+        return False
+    try:
+        float(text)
+        return True
+    except ValueError:
+        return False
+
+
+def merge_key(row: dict[str, str]) -> str:
+    return "||".join(
+        clean(row.get(column))
+        for column in ("Study_ID", "ROI_Homogenized", "Side", "Measure")
+    )
+
+
+def summarize_csv(path: Path) -> dict[str, object]:
     if not path.exists():
-        return CsvSummary(path=relpath(path), exists=False)
+        return {
+            "path": relpath(path),
+            "exists": False,
+            "rows": 0,
+            "columns": 0,
+            "non_null_counts": {},
+        }
 
     rows = read_csv_rows(path)
     fields = list(rows[0].keys()) if rows else []
     non_null_counts = {}
     for col in CSV_KEY_COLUMNS:
         if col in fields:
-            count = sum(1 for row in rows if (row.get(col) or "").strip() not in {"", "NA", "NaN", "nan"})
-            non_null_counts[col] = count
-    return CsvSummary(
-        path=relpath(path),
-        exists=True,
-        rows=len(rows),
-        columns=len(fields),
-        non_null_counts=non_null_counts,
-    )
+            non_null_counts[col] = sum(1 for row in rows if has_value(row.get(col)))
 
-
-def relpath(path: Path) -> str:
-    return path.relative_to(REPO_ROOT).as_posix()
+    return {
+        "path": relpath(path),
+        "exists": True,
+        "rows": len(rows),
+        "columns": len(fields),
+        "non_null_counts": non_null_counts,
+    }
 
 
 def compare_csvs(left: Path, right: Path) -> dict[str, object]:
     left_rows = read_csv_rows(left)
     right_rows = read_csv_rows(right)
     changed_rows = []
-    fields_to_compare = [
+    tracked_fields = [
         "Study_ID",
         "ROI_Homogenized",
         "Hedges_g_exact",
@@ -206,8 +356,8 @@ def compare_csvs(left: Path, right: Path) -> dict[str, object]:
 
     for index, (left_row, right_row) in enumerate(zip(left_rows, right_rows)):
         differences = {}
-        for field in fields_to_compare:
-            if (left_row.get(field) or "") != (right_row.get(field) or ""):
+        for field in tracked_fields:
+            if clean(left_row.get(field)) != clean(right_row.get(field)):
                 differences[field] = {
                     "left": left_row.get(field),
                     "right": right_row.get(field),
@@ -232,15 +382,218 @@ def compare_csvs(left: Path, right: Path) -> dict[str, object]:
     }
 
 
-def extract_declared_paths(script_path: Path) -> dict[str, list[str]]:
-    text = script_path.read_text(encoding="utf-8", errors="replace")
-    inputs = sorted(set(re.findall(r'(?i)(?:input_file|DATA_FILE)\s*[:=<-]+\s*[r"]*"([^"\n]+(?:csv|xlsx|json))"', text)))
-    outputs = sorted(set(re.findall(r'(?i)(?:output_file|OUTPUT_PNG|output_png)\s*[:=<-]+\s*[r"]*"([^"\n]+(?:csv|png|svg|pdf))"', text)))
-    saves = sorted(set(re.findall(r'(?i)([A-Za-z0-9_\-]+(?:\.png|\.svg|\.pdf|\.csv))', text)))
+def assert_unique_keys(rows: list[dict[str, str]], source_name: str) -> dict[str, dict[str, str]]:
+    keyed: dict[str, dict[str, str]] = {}
+    for row in rows:
+        key = merge_key(row)
+        if key in keyed:
+            raise ValueError(
+                f"{source_name} has non-unique composite keys on "
+                "Study_ID + ROI_Homogenized + Side + Measure"
+            )
+        keyed[key] = row
+    return keyed
+
+
+def prefer(primary: str | None, secondary: str | None) -> str:
+    if has_value(primary):
+        return clean(primary)
+    if has_value(secondary):
+        return clean(secondary)
+    return ""
+
+
+def source_of_value(
+    primary: str | None,
+    secondary: str | None,
+    primary_name: str,
+    secondary_name: str,
+) -> str:
+    if has_value(primary):
+        return primary_name
+    if has_value(secondary):
+        return secondary_name
+    return "missing"
+
+
+def reconcile_secondary_tables(
+    historical_rows: list[dict[str, str]],
+    computed_rows: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    historical = assert_unique_keys(historical_rows, "historical")
+    computed = assert_unique_keys(computed_rows, "computed")
+
+    if set(historical) != set(computed):
+        raise ValueError(
+            "Historical and computed secondary-plot tables do not cover the same composite keys."
+        )
+
+    columns = list(historical_rows[0].keys()) if historical_rows else []
+    reconciled: list[dict[str, str]] = []
+
+    for row in historical_rows:
+        key = merge_key(row)
+        historical_row = historical[key]
+        computed_row = computed[key]
+
+        merged = {
+            column: prefer(historical_row.get(column), computed_row.get(column))
+            for column in columns
+        }
+        merged["effect_source"] = source_of_value(
+            historical_row.get("Hedges_g_exact"),
+            computed_row.get("Hedges_g_exact"),
+            "historical",
+            "computed",
+        )
+        merged["variance_source"] = source_of_value(
+            historical_row.get("Hedges_g_variance"),
+            computed_row.get("Hedges_g_variance"),
+            "historical",
+            "computed",
+        )
+        if has_value(historical_row.get("CI_lower")) and has_value(historical_row.get("CI_upper")):
+            merged["ci_source"] = "historical"
+        elif has_value(computed_row.get("CI_lower")) and has_value(computed_row.get("CI_upper")):
+            merged["ci_source"] = "computed"
+        else:
+            merged["ci_source"] = "missing"
+
+        reconciled.append(merged)
+
+    return reconciled
+
+
+def matches_any(text: str, patterns: list[str]) -> bool:
+    lowered = clean(text).lower()
+    return any(pattern in lowered for pattern in patterns)
+
+
+def subset_secondary_rows(
+    rows: list[dict[str, str]],
+    etio: str,
+    region_type: str,
+    require_variance: bool = False,
+    require_ci: bool = False,
+) -> list[dict[str, str]]:
+    patterns = DK_PATTERNS if region_type == "cortex" else SUB_PATTERNS
+    subset = [
+        row
+        for row in rows
+        if clean(row.get("Congenital_or_Acquired")).lower() == etio
+        and has_float(row.get("Hedges_g_exact"))
+        and matches_any(clean(row.get("ROI_Homogenized")), patterns)
+    ]
+
+    if require_variance:
+        subset = [row for row in subset if has_float(row.get("Hedges_g_variance"))]
+
+    if require_ci:
+        subset = [
+            row
+            for row in subset
+            if has_float(row.get("CI_lower")) and has_float(row.get("CI_upper"))
+        ]
+
+    return subset
+
+
+def forest_rows_for_group(rows: list[dict[str, str]], etio: str) -> list[dict[str, str]]:
+    return [
+        row
+        for row in rows
+        if clean(row.get("Congenital_or_Acquired")).lower() == etio
+        and has_float(row.get("Hedges_g_exact"))
+        and has_float(row.get("CI_lower"))
+        and has_float(row.get("CI_upper"))
+    ]
+
+
+def current_secondary_plot_status() -> dict[str, object]:
+    historical_path = TRACKED_CSVS["historical_output_with_g"]
+    computed_path = TRACKED_CSVS["computed_output_with_g"]
+    if not historical_path.exists() or not computed_path.exists():
+        return {
+            "hybrid_rows": 0,
+            "value_sources": {},
+            "funnel_baujat": [],
+            "forest": [],
+        }
+
+    historical_rows = read_csv_rows(historical_path)
+    computed_rows = read_csv_rows(computed_path)
+    hybrid_rows = reconcile_secondary_tables(historical_rows, computed_rows)
+
+    source_counts = {
+        "effect_source": {
+            source: sum(1 for row in hybrid_rows if row["effect_source"] == source)
+            for source in ("historical", "computed", "missing")
+        },
+        "variance_source": {
+            source: sum(1 for row in hybrid_rows if row["variance_source"] == source)
+            for source in ("historical", "computed", "missing")
+        },
+        "ci_source": {
+            source: sum(1 for row in hybrid_rows if row["ci_source"] == source)
+            for source in ("historical", "computed", "missing")
+        },
+    }
+
+    funnel_baujat = []
+    for etio in ("acquired", "congenital"):
+        for region_type in ("cortex", "subcortex"):
+            rows_effect = subset_secondary_rows(hybrid_rows, etio, region_type)
+            rows_variance = subset_secondary_rows(
+                hybrid_rows,
+                etio,
+                region_type,
+                require_variance=True,
+            )
+            rows_ci = subset_secondary_rows(
+                hybrid_rows,
+                etio,
+                region_type,
+                require_ci=True,
+            )
+            funnel_baujat.append(
+                {
+                    "etio": etio,
+                    "region_type": region_type,
+                    "rows_effect": len(rows_effect),
+                    "rows_variance": len(rows_variance),
+                    "rows_ci": len(rows_ci),
+                    "eligible_for_model": len(rows_variance) >= 2,
+                    "funnel_output_exists": (
+                        ROOT / "mycode-11.24" / f"funnel_{etio}_{region_type}.png"
+                    ).exists(),
+                    "baujat_output_exists": (
+                        ROOT / "mycode-11.24" / f"baujat_{etio}_{region_type}.png"
+                    ).exists(),
+                }
+            )
+
+    forest = []
+    for etio in ("acquired", "congenital"):
+        rows_ci = forest_rows_for_group(hybrid_rows, etio)
+        forest.append(
+            {
+                "etio": etio,
+                "rows_ci": len(rows_ci),
+                "eligible_for_plot": len(rows_ci) >= 1,
+                "png_output_exists": (
+                    ROOT / "mycode-11.24" / "forest" / f"forest_{etio}.png"
+                ).exists(),
+                "svg_output_exists": (
+                    ROOT / "mycode-11.24" / "forest" / f"forest_{etio}.svg"
+                ).exists(),
+            }
+        )
+
     return {
-        "declared_inputs": inputs,
-        "declared_output_vars": outputs,
-        "mentioned_output_like_names": saves,
+        "hybrid_rows": len(hybrid_rows),
+        "value_sources": source_counts,
+        "funnel_baujat": funnel_baujat,
+        "forest": forest,
     }
 
 
@@ -253,6 +606,7 @@ def build_artifact_provenance() -> list[dict[str, object]]:
         ROOT / "plot_roi_counts_top20.png",
         ROOT / "mycode-11.24" / "output.csv",
         ROOT / "mycode-11.24" / "output_with_g.csv",
+        ROOT / "mycode-11.24" / "output_with_g_computed.csv",
         ROOT / "mycode-11.24" / "output_final.csv",
         ROOT / "mycode-11.24" / "jsonwithg.csv",
         ROOT / "mycode-11.24" / "brain_acquired_DK2.png",
@@ -262,25 +616,35 @@ def build_artifact_provenance() -> list[dict[str, object]]:
         ROOT / "mycode-11.24" / "acquired_right_lateral_DK.png",
         ROOT / "mycode-11.24" / "acquired_right_medial_DK.png",
         ROOT / "mycode-11.24" / "acquired_subcortex_cerebellum_ASEG.png",
+        ROOT / "mycode-11.24" / "funnel_acquired_cortex.png",
+        ROOT / "mycode-11.24" / "funnel_acquired_subcortex.png",
+        ROOT / "mycode-11.24" / "funnel_congenital_cortex.png",
+        ROOT / "mycode-11.24" / "funnel_congenital_subcortex.png",
+        ROOT / "mycode-11.24" / "baujat_acquired_cortex.png",
+        ROOT / "mycode-11.24" / "baujat_acquired_subcortex.png",
+        ROOT / "mycode-11.24" / "baujat_congenital_cortex.png",
+        ROOT / "mycode-11.24" / "baujat_congenital_subcortex.png",
+        ROOT / "mycode-11.24" / "forest" / "forest_acquired.png",
+        ROOT / "mycode-11.24" / "forest" / "forest_acquired.svg",
+        ROOT / "mycode-11.24" / "forest" / "forest_congenital.png",
+        ROOT / "mycode-11.24" / "forest" / "forest_congenital.svg",
     ]
-    script_outputs = {
-        output: relpath(item["path"])
-        for item in SCRIPT_CATALOG
-        for output in item["expected_outputs"]
-    }
+
+    script_outputs = {}
+    for item in SCRIPT_CATALOG:
+        base_dir = item["path"].parent
+        for output in item["expected_outputs"]:
+            script_outputs[(base_dir / output).name] = relpath(item["path"])
 
     provenance = []
     for path in files:
-        name = path.name
-        if not path.exists():
-            status = "not attributable from current evidence"
-            producer = None
-        elif name in script_outputs:
+        producer = script_outputs.get(path.name)
+        if path.exists() and producer:
             status = "produced by script"
-            producer = script_outputs[name]
-        else:
+        elif path.exists():
             status = "possibly produced by script"
-            producer = None
+        else:
+            status = "not attributable from current evidence"
         provenance.append(
             {
                 "artifact": relpath(path),
@@ -293,6 +657,8 @@ def build_artifact_provenance() -> list[dict[str, object]]:
 
 
 def write_markdown(summary: dict[str, object]) -> None:
+    secondary = summary["secondary_plot_status"]
+
     lines = [
         "# Workflow Audit",
         "",
@@ -300,40 +666,79 @@ def write_markdown(summary: dict[str, object]) -> None:
         "",
         "## Workflow Conclusion",
         "",
-        "- The strongest historical execution branch is `vestibular-meta-analysis/mycode-11.24`.",
-        "- `output.csv` is the precursor table and `output_with_g.csv` is the provisional source-of-truth analysis table.",
-        "- `output_final.csv` remains untrusted because the merge step appears to discard some populated effect-size or CI values.",
-        "- The top-level Python/R scripts are newer adaptations; only the descriptive top-level PNGs are directly attributable from current files.",
+        "- The strongest historical execution branch remains `vestibular-meta-analysis/mycode-11.24`.",
+        "- The verified runnable brain branch is now `output.csv -> compute_hedges_g.R -> output_with_g_computed.csv -> brain_plots_master.R`.",
+        "- The preserved historical analysis table is `mycode-11.24/output_with_g.csv`.",
+        "- The verified rerun table is `mycode-11.24/output_with_g_computed.csv`.",
+        "- Secondary plots now use a hybrid reconciliation layer that preserves historical variance/CI values and falls back to recomputed effect sizes where needed.",
+        "- `output_final.csv` remains untrusted because the merge step appears to discard populated effect-size or CI values.",
         "",
-        "## Likely Historical Pipeline",
+        "## Verified Runnable Branches",
         "",
-        "1. `output.csv` assembled from manual extraction and/or JSON-derived rows.",
-        "2. `mycode-11.24/compute_hedges_g.R` computed or filled `Hedges_g_exact` and `Hedges_g_variance`, producing `output_with_g.csv`.",
-        "3. Figure scripts consumed `output_with_g.csv` to produce the current brain-map outputs.",
-        "4. `merge_json_into_master.R` later attempted a JSON-based merge into `output_final.csv`, but that step is not considered canonical.",
+        "1. Brain plots: `output.csv -> compute_hedges_g.R -> output_with_g_computed.csv -> brain_plots_master.R`.",
+        "2. Secondary plots: `output_with_g.csv + output_with_g_computed.csv -> meta_plot_helpers.R -> funnel/Baujat/forest masters`.",
         "",
-        "## CSV Inventory",
+        "## Current Secondary-Plot Reality",
         "",
-        "| File | Exists | Rows | Cols | Key non-null counts |",
-        "|---|---:|---:|---:|---|",
+        "| Group | Effect rows | Variance rows | CI rows | Eligible for funnel/Baujat | Funnel present | Baujat present |",
+        "|---|---:|---:|---:|---|---|---|",
     ]
 
-    for name, csv_summary in summary["csv_summaries"].items():
-        non_null = ", ".join(f"{key}={value}" for key, value in (csv_summary["non_null_counts"] or {}).items())
+    for item in secondary["funnel_baujat"]:
+        lines.append(
+            f"| `{item['etio']}/{item['region_type']}` | {item['rows_effect']} | "
+            f"{item['rows_variance']} | {item['rows_ci']} | "
+            f"{'yes' if item['eligible_for_model'] else 'no'} | "
+            f"{'yes' if item['funnel_output_exists'] else 'no'} | "
+            f"{'yes' if item['baujat_output_exists'] else 'no'} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "| Etiology | CI rows | Eligible for forest | PNG present | SVG present |",
+            "|---|---:|---|---|---|",
+        ]
+    )
+
+    for item in secondary["forest"]:
+        lines.append(
+            f"| `{item['etio']}` | {item['rows_ci']} | "
+            f"{'yes' if item['eligible_for_plot'] else 'no'} | "
+            f"{'yes' if item['png_output_exists'] else 'no'} | "
+            f"{'yes' if item['svg_output_exists'] else 'no'} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## CSV Inventory",
+            "",
+            "| File | Exists | Rows | Cols | Key non-null counts |",
+            "|---|---:|---:|---:|---|",
+        ]
+    )
+
+    for csv_summary in summary["csv_summaries"].values():
+        non_null = ", ".join(
+            f"{key}={value}" for key, value in csv_summary["non_null_counts"].items()
+        )
         lines.append(
             f"| `{csv_summary['path']}` | {'yes' if csv_summary['exists'] else 'no'} | "
             f"{csv_summary['rows']} | {csv_summary['columns']} | {non_null} |"
         )
 
-    comparison = summary["output_with_g_vs_output_final"]
+    historical_vs_final = summary["historical_vs_output_final"]
+    historical_vs_computed = summary["historical_vs_computed"]
     lines.extend(
         [
             "",
-            "## `output_with_g.csv` vs `output_final.csv`",
+            "## Table Comparisons",
             "",
-            f"- Row counts are stable: {comparison['row_count_left']} vs {comparison['row_count_right']}.",
-            f"- Rows with at least one changed tracked field: {comparison['changed_row_count']}.",
-            "- Sample differences show missing values in `output_final.csv` where `output_with_g.csv` contains populated effect sizes or confidence bounds.",
+            f"- `output_with_g.csv` vs `output_final.csv`: {historical_vs_final['changed_row_count']} rows change in tracked effect-size or CI fields.",
+            f"- `output_with_g.csv` vs `output_with_g_computed.csv`: {historical_vs_computed['changed_row_count']} rows change in tracked effect-size or CI fields.",
+            "- The first comparison is the main reason `output_final.csv` remains non-canonical.",
+            "- The second comparison is expected because the verified rerun table is a recomputation branch, not a byte-for-byte historical replica.",
             "",
             "## Script Provenance",
             "",
@@ -352,27 +757,30 @@ def write_markdown(summary: dict[str, object]) -> None:
             "",
             "## Artifact Provenance",
             "",
-            "| Artifact | Status | Producer |",
-            "|---|---|---|",
+            "| Artifact | Exists | Status | Producer |",
+            "|---|---|---|---|",
         ]
     )
 
     for item in summary["artifact_provenance"]:
         producer = f"`{item['producer']}`" if item["producer"] else ""
-        lines.append(f"| `{item['artifact']}` | {item['status']} | {producer} |")
+        lines.append(
+            f"| `{item['artifact']}` | {'yes' if item['exists'] else 'no'} | "
+            f"{item['status']} | {producer} |"
+        )
 
     lines.extend(
         [
             "",
             "## Top-Level Adaptation Branch",
             "",
-            "- `combine_all_json_to_csv.py` can regenerate a base CSV from a JSON folder using the shared 40-column schema.",
-            "- `meta_analysis_full.py` clearly matches the committed descriptive PNGs, but it expects `all_meta_rows.csv`, which is not present in this directory.",
-            "- `make_brain_panels.r` is incomplete in its current location because it sources `brain_plot.R`, which is only present under `.ref/brain plot/brain_plot.R`.",
+            "- `combine_all_json_to_csv.py` can regenerate a base CSV from JSON using the shared 40-column schema.",
+            "- `meta_analysis_full.py` matches the committed descriptive top-level PNGs, but it expects `all_meta_rows.csv`, which is not present here.",
+            "- `make_brain_panels.r` remains incomplete in its current location because it expects a local `brain_plot.R` that is not present in the top-level folder.",
             "",
             "## References",
             "",
-            "- `.ref` contains Excel-based antecedent scripts and examples that appear to be the conceptual source for the newer local rewrites.",
+            "- `.ref` contains the original Excel-based or desktop-path scripts that informed the newer local rewrites.",
         ]
     )
 
@@ -381,32 +789,36 @@ def write_markdown(summary: dict[str, object]) -> None:
 
 def main() -> None:
     csv_summaries = {
-        name: summarize_csv(path).__dict__
+        name: summarize_csv(path)
         for name, path in TRACKED_CSVS.items()
     }
-    output_compare = compare_csvs(
-        TRACKED_CSVS["legacy_output_with_g"],
-        TRACKED_CSVS["legacy_output_final"],
-    )
 
     scripts = []
     for item in SCRIPT_CATALOG:
         enriched = dict(item)
         enriched["path"] = relpath(item["path"])
-        enriched["declared_paths"] = extract_declared_paths(item["path"])
         scripts.append(enriched)
 
     summary = {
         "generated_from": relpath(Path(__file__)),
         "csv_summaries": csv_summaries,
-        "output_with_g_vs_output_final": output_compare,
+        "historical_vs_output_final": compare_csvs(
+            TRACKED_CSVS["historical_output_with_g"],
+            TRACKED_CSVS["legacy_output_final"],
+        ),
+        "historical_vs_computed": compare_csvs(
+            TRACKED_CSVS["historical_output_with_g"],
+            TRACKED_CSVS["computed_output_with_g"],
+        ),
+        "secondary_plot_status": current_secondary_plot_status(),
         "scripts": scripts,
         "artifact_provenance": build_artifact_provenance(),
         "conclusion": {
             "historical_branch": "vestibular-meta-analysis/mycode-11.24",
-            "provisional_source_of_truth": "vestibular-meta-analysis/mycode-11.24/output_with_g.csv",
+            "historical_table": "vestibular-meta-analysis/mycode-11.24/output_with_g.csv",
+            "verified_rerun_table": "vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv",
             "untrusted_intermediates": [
-                "jsonwithg.csv",
+                "vestibular-meta-analysis/jsonwithg.csv",
                 "vestibular-meta-analysis/mycode-11.24/jsonwithg.csv",
                 "vestibular-meta-analysis/mycode-11.24/output_final.csv",
             ],

@@ -37,7 +37,7 @@
         "Big_Area": 125
       }
     },
-    "legacy_output_with_g": {
+    "historical_output_with_g": {
       "path": "vestibular-meta-analysis/mycode-11.24/output_with_g.csv",
       "exists": true,
       "rows": 129,
@@ -49,6 +49,24 @@
         "Hedges_g_variance": 4,
         "CI_lower": 23,
         "CI_upper": 23,
+        "Congenital_or_Acquired": 129,
+        "Measure": 129,
+        "Matter": 125,
+        "Big_Area": 125
+      }
+    },
+    "computed_output_with_g": {
+      "path": "vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv",
+      "exists": true,
+      "rows": 129,
+      "columns": 40,
+      "non_null_counts": {
+        "Study_ID": 129,
+        "ROI_Homogenized": 129,
+        "Hedges_g_exact": 85,
+        "Hedges_g_variance": 0,
+        "CI_lower": 0,
+        "CI_upper": 0,
         "Congenital_or_Acquired": 129,
         "Measure": 129,
         "Matter": 125,
@@ -110,7 +128,7 @@
       }
     }
   },
-  "output_with_g_vs_output_final": {
+  "historical_vs_output_final": {
     "left": "vestibular-meta-analysis/mycode-11.24/output_with_g.csv",
     "right": "vestibular-meta-analysis/mycode-11.24/output_final.csv",
     "row_count_left": 129,
@@ -327,23 +345,347 @@
       }
     ]
   },
+  "historical_vs_computed": {
+    "left": "vestibular-meta-analysis/mycode-11.24/output_with_g.csv",
+    "right": "vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv",
+    "row_count_left": 129,
+    "row_count_right": 129,
+    "changed_row_count": 100,
+    "sample_changed_rows": [
+      {
+        "row_index": 0,
+        "Study_ID": "Alhilali_2014_Cerebellum_LobuleVI",
+        "ROI_Homogenized": "Cerebellum Lobule VI",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "-0.5834",
+            "right": "NA"
+          },
+          "Hedges_g_variance": {
+            "left": "0.06151",
+            "right": "NA"
+          },
+          "CI_lower": {
+            "left": "-1.0695",
+            "right": "NA"
+          },
+          "CI_upper": {
+            "left": "-0.0973",
+            "right": "NA"
+          }
+        }
+      },
+      {
+        "row_index": 1,
+        "Study_ID": "Alhilali_2014_Vermis_VIII_IX",
+        "ROI_Homogenized": "Vermian Lobules VIIIa/VIIIb/IX",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "-0.6229",
+            "right": "NA"
+          },
+          "Hedges_g_variance": {
+            "left": "0.06187",
+            "right": "NA"
+          },
+          "CI_lower": {
+            "left": "-1.1104",
+            "right": "NA"
+          },
+          "CI_upper": {
+            "left": "-0.1354",
+            "right": "NA"
+          }
+        }
+      },
+      {
+        "row_index": 2,
+        "Study_ID": "Alhilali_2014_Fusiform_Gyri",
+        "ROI_Homogenized": "Fusiform Gyrus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "-1.2951",
+            "right": "NA"
+          },
+          "Hedges_g_variance": {
+            "left": "0.11979",
+            "right": "NA"
+          },
+          "CI_lower": {
+            "left": "-1.9735",
+            "right": "NA"
+          },
+          "CI_upper": {
+            "left": "-0.6167",
+            "right": "NA"
+          }
+        }
+      },
+      {
+        "row_index": 3,
+        "Study_ID": "Alhilali_2014_Vermis_MD_Increase",
+        "ROI_Homogenized": "Vermian Lobules II/III",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "-1.3147",
+            "right": "NA"
+          },
+          "Hedges_g_variance": {
+            "left": "0.12043",
+            "right": "NA"
+          },
+          "CI_lower": {
+            "left": "-1.9949",
+            "right": "NA"
+          },
+          "CI_upper": {
+            "left": "-0.6345",
+            "right": "NA"
+          }
+        }
+      },
+      {
+        "row_index": 16,
+        "Study_ID": "Brandt_2005_HPC_L",
+        "ROI_Homogenized": "Hippocampus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "-1.378622746",
+            "right": "-1.3786227455215412"
+          }
+        }
+      },
+      {
+        "row_index": 17,
+        "Study_ID": "Brandt_2005_HPC_R",
+        "ROI_Homogenized": "Hippocampus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "-1.589397523",
+            "right": "-1.5893975233417597"
+          }
+        }
+      },
+      {
+        "row_index": 18,
+        "Study_ID": "Brandt_2005_HPC_Total",
+        "ROI_Homogenized": "Hippocampus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "-1.549064259",
+            "right": "-1.5490642592705235"
+          }
+        }
+      },
+      {
+        "row_index": 19,
+        "Study_ID": "Cheng_2023_ALFF_Lingual_L",
+        "ROI_Homogenized": "Lingual gyrus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "1.409349815",
+            "right": "1.4093498154594637"
+          }
+        }
+      },
+      {
+        "row_index": 20,
+        "Study_ID": "Cheng_2023_ReHo_Lingual_L",
+        "ROI_Homogenized": "Lingual gyrus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "1.451965959",
+            "right": "1.451965959196932"
+          }
+        }
+      },
+      {
+        "row_index": 21,
+        "Study_ID": "Cheng_2023_ReHo_Lingual_R",
+        "ROI_Homogenized": "Lingual gyrus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "1.451965959",
+            "right": "1.451965959196932"
+          }
+        }
+      },
+      {
+        "row_index": 22,
+        "Study_ID": "Cheng_2023_ReHo_Postcentral_R",
+        "ROI_Homogenized": "Postcentral gyrus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "1.279644724",
+            "right": "1.2796447244790543"
+          }
+        }
+      },
+      {
+        "row_index": 23,
+        "Study_ID": "Cheng_2023_DC_Lingual_L",
+        "ROI_Homogenized": "Lingual gyrus",
+        "differences": {
+          "Hedges_g_exact": {
+            "left": "1.268417735",
+            "right": "1.2684177349444048"
+          }
+        }
+      }
+    ]
+  },
+  "secondary_plot_status": {
+    "hybrid_rows": 129,
+    "value_sources": {
+      "effect_source": {
+        "historical": 91,
+        "computed": 0,
+        "missing": 38
+      },
+      "variance_source": {
+        "historical": 4,
+        "computed": 0,
+        "missing": 125
+      },
+      "ci_source": {
+        "historical": 23,
+        "computed": 0,
+        "missing": 106
+      }
+    },
+    "funnel_baujat": [
+      {
+        "etio": "acquired",
+        "region_type": "cortex",
+        "rows_effect": 47,
+        "rows_variance": 1,
+        "rows_ci": 5,
+        "eligible_for_model": false,
+        "funnel_output_exists": false,
+        "baujat_output_exists": false
+      },
+      {
+        "etio": "acquired",
+        "region_type": "subcortex",
+        "rows_effect": 36,
+        "rows_variance": 3,
+        "rows_ci": 9,
+        "eligible_for_model": true,
+        "funnel_output_exists": true,
+        "baujat_output_exists": true
+      },
+      {
+        "etio": "congenital",
+        "region_type": "cortex",
+        "rows_effect": 0,
+        "rows_variance": 0,
+        "rows_ci": 0,
+        "eligible_for_model": false,
+        "funnel_output_exists": false,
+        "baujat_output_exists": false
+      },
+      {
+        "etio": "congenital",
+        "region_type": "subcortex",
+        "rows_effect": 0,
+        "rows_variance": 0,
+        "rows_ci": 0,
+        "eligible_for_model": false,
+        "funnel_output_exists": false,
+        "baujat_output_exists": false
+      }
+    ],
+    "forest": [
+      {
+        "etio": "acquired",
+        "rows_ci": 14,
+        "eligible_for_plot": true,
+        "png_output_exists": true,
+        "svg_output_exists": true
+      },
+      {
+        "etio": "congenital",
+        "rows_ci": 0,
+        "eligible_for_plot": false,
+        "png_output_exists": false,
+        "svg_output_exists": false
+      }
+    ]
+  },
   "scripts": [
     {
       "path": "vestibular-meta-analysis/mycode-11.24/compute_hedges_g.R",
       "role": "core_stage",
       "status": "produced by script",
-      "notes": "Reads output.csv and writes output_with_g.csv.",
+      "notes": "Stable repo-relative compute stage. Reads output.csv and writes output_with_g_computed.csv.",
       "expected_outputs": [
-        "output_with_g.csv"
-      ],
-      "declared_paths": {
-        "declared_inputs": [],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "output.csv",
-          "output_with_g_computed.csv"
-        ]
-      }
+        "output_with_g_computed.csv"
+      ]
+    },
+    {
+      "path": "vestibular-meta-analysis/run_brain_plot_pipeline.R",
+      "role": "verified_pipeline",
+      "status": "produced by script",
+      "notes": "Verified one-command brain runner: output.csv -> compute_hedges_g.R -> output_with_g_computed.csv -> brain_plots_master.R.",
+      "expected_outputs": []
+    },
+    {
+      "path": "vestibular-meta-analysis/brain_plots_master.R",
+      "role": "verified_pipeline",
+      "status": "produced by script",
+      "notes": "Repo-relative replacement for the acquired brain-plot branch. Matches the committed acquired brain outputs.",
+      "expected_outputs": [
+        "brain_acquired_DK2.png",
+        "brainpanel_acquired_DK_cortex_only.png",
+        "acquired_left_lateral_DK.png",
+        "acquired_left_medial_DK.png",
+        "acquired_right_lateral_DK.png",
+        "acquired_right_medial_DK.png",
+        "acquired_subcortex_cerebellum_ASEG.png"
+      ]
+    },
+    {
+      "path": "vestibular-meta-analysis/meta_plot_helpers.R",
+      "role": "helper",
+      "status": "produced by script",
+      "notes": "Hybrid secondary-plot reconciliation layer. Preserves historical variance/CI values and falls back to recomputed effect sizes by composite key.",
+      "expected_outputs": []
+    },
+    {
+      "path": "vestibular-meta-analysis/funnel_plots_master.R",
+      "role": "verified_pipeline",
+      "status": "produced by script",
+      "notes": "Repo-relative funnel master using the hybrid secondary-plot table and REML. Saves only variance-eligible groups.",
+      "expected_outputs": [
+        "funnel_acquired_cortex.png",
+        "funnel_acquired_subcortex.png",
+        "funnel_congenital_cortex.png",
+        "funnel_congenital_subcortex.png"
+      ]
+    },
+    {
+      "path": "vestibular-meta-analysis/baujat_plots_master.R",
+      "role": "verified_pipeline",
+      "status": "produced by script",
+      "notes": "Repo-relative Baujat master using the hybrid secondary-plot table and REML. Saves only variance-eligible groups.",
+      "expected_outputs": [
+        "baujat_acquired_cortex.png",
+        "baujat_acquired_subcortex.png",
+        "baujat_congenital_cortex.png",
+        "baujat_congenital_subcortex.png"
+      ]
+    },
+    {
+      "path": "vestibular-meta-analysis/forest_plots_master.R",
+      "role": "verified_pipeline",
+      "status": "produced by script",
+      "notes": "Repo-relative forest master using the hybrid secondary-plot table. Saves etiologies that have Hedges g plus confidence bounds.",
+      "expected_outputs": [
+        "forest/forest_acquired.png",
+        "forest/forest_acquired.svg",
+        "forest/forest_congenital.png",
+        "forest/forest_congenital.svg"
+      ]
     },
     {
       "path": "vestibular-meta-analysis/mycode-11.24/merge_json_into_master.R",
@@ -352,161 +694,73 @@
       "notes": "Suspicious merge step. Join uses Study_ID + ROI_Homogenized, but jsonwithg.csv is sparse in ROI_Homogenized.",
       "expected_outputs": [
         "output_final.csv"
-      ],
-      "declared_paths": {
-        "declared_inputs": [],
-        "declared_output_vars": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output_final.csv"
-        ],
-        "mentioned_output_like_names": [
-          "jsonwithg.csv",
-          "output_final.csv",
-          "output_with_g.csv"
-        ]
-      }
+      ]
     },
     {
       "path": "vestibular-meta-analysis/mycode-11.24/Brainsurfacemaps.r",
-      "role": "figure",
+      "role": "historical_figure",
       "status": "produced by script",
-      "notes": "Creates acquired cortical DK map from output_with_g.csv.",
+      "notes": "Historical acquired cortical DK map script using output_with_g.csv.",
       "expected_outputs": [
         "brain_acquired_DK2.png"
-      ],
-      "declared_paths": {
-        "declared_inputs": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output_with_g.csv"
-        ],
-        "declared_output_vars": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/brain_acquired_DK2.png"
-        ],
-        "mentioned_output_like_names": [
-          "brain_acquired_DK2.png",
-          "output_with_g.csv"
-        ]
-      }
+      ]
     },
     {
       "path": "vestibular-meta-analysis/mycode-11.24/brainonlydk.R",
-      "role": "figure",
+      "role": "historical_figure",
       "status": "produced by script",
-      "notes": "Creates combined cortex-only DK panel.",
+      "notes": "Historical combined cortex-only DK panel script.",
       "expected_outputs": [
         "brainpanel_acquired_DK_cortex_only.png"
-      ],
-      "declared_paths": {
-        "declared_inputs": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output_with_g.csv"
-        ],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "_DK_cortex_only.png",
-          "output_with_g.csv"
-        ]
-      }
+      ]
     },
     {
       "path": "vestibular-meta-analysis/mycode-11.24/braint3.R",
-      "role": "figure",
+      "role": "historical_figure",
       "status": "produced by script",
-      "notes": "Creates four cortical hemisphere views plus one subcortex/cerebellum PNG.",
+      "notes": "Historical acquired cortical hemisphere views plus subcortex/cerebellum figure script.",
       "expected_outputs": [
         "acquired_left_lateral_DK.png",
         "acquired_left_medial_DK.png",
         "acquired_right_lateral_DK.png",
         "acquired_right_medial_DK.png",
         "acquired_subcortex_cerebellum_ASEG.png"
-      ],
-      "declared_paths": {
-        "declared_inputs": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output_with_g.csv"
-        ],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "acquired_left_lateral_DK.png",
-          "acquired_left_medial_DK.png",
-          "acquired_right_lateral_DK.png",
-          "acquired_right_medial_DK.png",
-          "acquired_subcortex_cerebellum_ASEG.png",
-          "output_with_g.csv"
-        ]
-      }
+      ]
     },
     {
       "path": "vestibular-meta-analysis/mycode-11.24/braint2.R",
-      "role": "figure",
+      "role": "historical_figure",
       "status": "possibly produced by script",
       "notes": "Configured to create brainpanel_acquired_DK_ASEG.png, but that output is not currently present.",
       "expected_outputs": [
         "brainpanel_acquired_DK_ASEG.png"
-      ],
-      "declared_paths": {
-        "declared_inputs": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output_with_g.csv"
-        ],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "brainpanel_acquired_DK_ASEG.png",
-          "output_with_g.csv"
-        ]
-      }
+      ]
     },
     {
       "path": "vestibular-meta-analysis/mycode-11.24/funnel.r",
-      "role": "figure",
+      "role": "reference_baseline",
       "status": "possibly produced by script",
-      "notes": "Generates etiology-based funnel plots from output_with_g.csv, but no matching funnel PNGs are present locally.",
-      "expected_outputs": [],
-      "declared_paths": {
-        "declared_inputs": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output_with_g.csv"
-        ],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "output_with_g.csv"
-        ]
-      }
+      "notes": "Older etiology-based funnel script retained as reference only.",
+      "expected_outputs": []
     },
     {
       "path": "vestibular-meta-analysis/mycode-11.24/funnelt2.R",
-      "role": "figure",
+      "role": "reference_baseline",
       "status": "possibly produced by script",
-      "notes": "Generates four region-specific funnel plots, but no matching outputs are present locally.",
+      "notes": "Older four-panel funnel script that informed the current funnel master.",
       "expected_outputs": [
         "funnel_acquired_cortex.png",
         "funnel_acquired_subcortex.png",
         "funnel_congenital_cortex.png",
         "funnel_congenital_subcortex.png"
-      ],
-      "declared_paths": {
-        "declared_inputs": [
-          "C:/Users/rjmod/Desktop/THESIS WORK/mycode-11.24/output_with_g.csv"
-        ],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "funnel_acquired_cortex.png",
-          "funnel_acquired_subcortex.png",
-          "funnel_congenital_cortex.png",
-          "funnel_congenital_subcortex.png",
-          "output_with_g.csv"
-        ]
-      }
+      ]
     },
     {
       "path": "vestibular-meta-analysis/mycode-11.24/forest.py",
-      "role": "figure",
+      "role": "reference_baseline",
       "status": "not attributable from current evidence",
-      "notes": "Template script with placeholder paths. No local forest outputs are present.",
-      "expected_outputs": [],
-      "declared_paths": {
-        "declared_inputs": [
-          "C:\\PATH\\TO\\all_meta_rows.csv"
-        ],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "all_meta_rows.csv"
-        ]
-      }
+      "notes": "Template Python forest script with non-local paths. Conceptual reference only.",
+      "expected_outputs": []
     },
     {
       "path": "vestibular-meta-analysis/meta_analysis_full.py",
@@ -518,26 +772,7 @@
         "plot_matter_counts.png",
         "plot_side_counts.png",
         "plot_roi_counts_top20.png"
-      ],
-      "declared_paths": {
-        "declared_inputs": [
-          "all_meta_rows.csv"
-        ],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "all_meta_rows.csv",
-          "baujat_plot.png",
-          "forest_all_effects.png",
-          "forest_overall_random_effect.png",
-          "funnel_plot.png",
-          "plot_big_area_counts.png",
-          "plot_big_area_mean_effect.png",
-          "plot_matter_counts.png",
-          "plot_roi_counts_top20.png",
-          "plot_side_counts.png",
-          "subgroup_congenital_acquired.png"
-        ]
-      }
+      ]
     },
     {
       "path": "vestibular-meta-analysis/combine_all_json_to_csv.py",
@@ -546,14 +781,7 @@
       "notes": "Can regenerate a base table from JSON, but the specific JSON source folder is not encoded here.",
       "expected_outputs": [
         "output.csv"
-      ],
-      "declared_paths": {
-        "declared_inputs": [],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "output.csv"
-        ]
-      }
+      ]
     },
     {
       "path": "vestibular-meta-analysis/make_brain_panels.r",
@@ -569,26 +797,7 @@
         "WM_funnel.png",
         "WM_baujat.png",
         "WM_roi_per_area.png"
-      ],
-      "declared_paths": {
-        "declared_inputs": [],
-        "declared_output_vars": [],
-        "mentioned_output_like_names": [
-          "GM_baujat.png",
-          "GM_brain_map.png",
-          "GM_funnel.png",
-          "GM_roi_per_area.png",
-          "WM_baujat.png",
-          "WM_brain_map.png",
-          "WM_funnel.png",
-          "WM_roi_per_area.png",
-          "_baujat.png",
-          "_brain_map.png",
-          "_funnel.png",
-          "_roi_per_area.png",
-          "all_meta_rows.csv"
-        ]
-      }
+      ]
     }
   ],
   "artifact_provenance": [
@@ -630,6 +839,12 @@
     },
     {
       "artifact": "vestibular-meta-analysis/mycode-11.24/output_with_g.csv",
+      "exists": true,
+      "status": "possibly produced by script",
+      "producer": null
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv",
       "exists": true,
       "status": "produced by script",
       "producer": "vestibular-meta-analysis/mycode-11.24/compute_hedges_g.R"
@@ -687,13 +902,86 @@
       "exists": true,
       "status": "produced by script",
       "producer": "vestibular-meta-analysis/mycode-11.24/braint3.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/funnel_acquired_cortex.png",
+      "exists": false,
+      "status": "not attributable from current evidence",
+      "producer": "vestibular-meta-analysis/mycode-11.24/funnelt2.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/funnel_acquired_subcortex.png",
+      "exists": true,
+      "status": "produced by script",
+      "producer": "vestibular-meta-analysis/mycode-11.24/funnelt2.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/funnel_congenital_cortex.png",
+      "exists": false,
+      "status": "not attributable from current evidence",
+      "producer": "vestibular-meta-analysis/mycode-11.24/funnelt2.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/funnel_congenital_subcortex.png",
+      "exists": false,
+      "status": "not attributable from current evidence",
+      "producer": "vestibular-meta-analysis/mycode-11.24/funnelt2.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/baujat_acquired_cortex.png",
+      "exists": false,
+      "status": "not attributable from current evidence",
+      "producer": "vestibular-meta-analysis/baujat_plots_master.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/baujat_acquired_subcortex.png",
+      "exists": true,
+      "status": "produced by script",
+      "producer": "vestibular-meta-analysis/baujat_plots_master.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/baujat_congenital_cortex.png",
+      "exists": false,
+      "status": "not attributable from current evidence",
+      "producer": "vestibular-meta-analysis/baujat_plots_master.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/baujat_congenital_subcortex.png",
+      "exists": false,
+      "status": "not attributable from current evidence",
+      "producer": "vestibular-meta-analysis/baujat_plots_master.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/forest/forest_acquired.png",
+      "exists": true,
+      "status": "produced by script",
+      "producer": "vestibular-meta-analysis/forest_plots_master.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/forest/forest_acquired.svg",
+      "exists": true,
+      "status": "produced by script",
+      "producer": "vestibular-meta-analysis/forest_plots_master.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/forest/forest_congenital.png",
+      "exists": false,
+      "status": "not attributable from current evidence",
+      "producer": "vestibular-meta-analysis/forest_plots_master.R"
+    },
+    {
+      "artifact": "vestibular-meta-analysis/mycode-11.24/forest/forest_congenital.svg",
+      "exists": false,
+      "status": "not attributable from current evidence",
+      "producer": "vestibular-meta-analysis/forest_plots_master.R"
     }
   ],
   "conclusion": {
     "historical_branch": "vestibular-meta-analysis/mycode-11.24",
-    "provisional_source_of_truth": "vestibular-meta-analysis/mycode-11.24/output_with_g.csv",
+    "historical_table": "vestibular-meta-analysis/mycode-11.24/output_with_g.csv",
+    "verified_rerun_table": "vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv",
     "untrusted_intermediates": [
-      "jsonwithg.csv",
+      "vestibular-meta-analysis/jsonwithg.csv",
       "vestibular-meta-analysis/mycode-11.24/jsonwithg.csv",
       "vestibular-meta-analysis/mycode-11.24/output_final.csv"
     ]

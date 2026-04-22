@@ -56,7 +56,8 @@ Those legacy scripts established provenance. The new verified runnable replaceme
 1. Treat the brain-plot branch as the first stable runnable pipeline:
    `output.csv` -> `compute_hedges_g.R` -> `output_with_g_computed.csv` -> `brain_plots_master.R`.
 2. Preserve [`output_with_g.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g.csv) as the historical checked-in table and use [`output_with_g_computed.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv) as the generated table for the verified rerun.
-3. Only after the brain-plot branch is frozen should you repair or retire `merge_json_into_master.R`, the funnel scripts, and the newer top-level adaptation scripts.
+3. Use the hybrid reconciliation in [`meta_plot_helpers.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/meta_plot_helpers.R) for funnel, Baujat, and forest plots so historical variance/CI values are preserved while recomputed effect sizes remain available when needed.
+4. Only after the secondary plot masters have been rerun and reviewed should you repair or retire `merge_json_into_master.R` and the newer top-level adaptation scripts.
 
 ## Audit Refresh
 

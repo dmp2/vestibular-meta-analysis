@@ -33,56 +33,63 @@ source(file.path(bootstrap_script_dir(), "meta_plot_helpers.R"))
 
 root_dir <- get_script_dir()
 output_dir <- meta_output_dir(root_dir)
-meta <- load_verified_meta(root_dir)
+meta <- load_secondary_plot_meta(root_dir, input_policy = "hybrid")
 
 plot_specs <- tibble::tribble(
-  ~etio,       ~region_type, ~filename,
-  "acquired",  "cortex",     "funnel_acquired_cortex.png",
-  "acquired",  "subcortex",  "funnel_acquired_subcortex.png",
-  "congenital","cortex",     "funnel_congenital_cortex.png",
-  "congenital","subcortex",  "funnel_congenital_subcortex.png"
+  ~etio,        ~region_type, ~filename,
+  "acquired",   "cortex",     "funnel_acquired_cortex.png",
+  "acquired",   "subcortex",  "funnel_acquired_subcortex.png",
+  "congenital", "cortex",     "funnel_congenital_cortex.png",
+  "congenital", "subcortex",  "funnel_congenital_subcortex.png"
 )
 
+describe_skip <- function(etio, region_type, reason) {
+  message("Skipping funnel plot for ", etio, " / ", region_type, ": ", reason)
+}
+
 make_funnel_plot <- function(meta, etio, region_type, out_file) {
-  dat <- subset_meta_region(meta, etio, region_type, require_variance = TRUE)
-  title <- paste("Funnel plot -", stringr::str_to_title(etio), ifelse(region_type == "cortex", "cortex", "subcortex + cerebellum"))
+  title <- paste(
+    "Funnel plot -",
+    stringr::str_to_title(etio),
+    ifelse(region_type == "cortex", "cortex", "subcortex + cerebellum")
+  )
   path <- file.path(output_dir, out_file)
+
+  base_dat <- subset_meta_region(meta, etio, region_type)
+  if (nrow(base_dat) == 0) {
+    describe_skip(etio, region_type, "no eligible effect-size rows in the reconciled table")
+    return(invisible(NULL))
+  }
+
+  dat <- subset_meta_region(meta, etio, region_type, require_variance = TRUE) %>%
+    mutate(
+      Hedges_g_exact = as.numeric(Hedges_g_exact),
+      Hedges_g_variance = as.numeric(Hedges_g_variance)
+    ) %>%
+    filter(!is.na(Hedges_g_exact), !is.na(Hedges_g_variance))
+
   k <- nrow(dat)
-
   if (k == 0) {
-    write_placeholder_plot(path, title, c("No effect sizes with variance available."))
-    message("Saved placeholder ", path)
+    describe_skip(etio, region_type, "no effect sizes with variance available after reconciliation")
     return(invisible(NULL))
   }
 
-  if (k == 1) {
-    write_placeholder_plot(
-      path,
-      title,
-      c(
-        "Only one effect size available.",
-        "Funnel plot is not interpretable.",
-        paste0("ROI: ", dat$ROI_Homogenized[1]),
-        paste0("Hedges g = ", round(dat$Hedges_g_exact[1], 3))
-      )
-    )
-    message("Saved placeholder ", path)
+  if (k < 2) {
+    describe_skip(etio, region_type, paste0("need at least 2 variance-eligible rows, found k = ", k))
     return(invisible(NULL))
   }
 
-  grDevices::png(path, width = 800, height = 800)
   fit <- tryCatch(
     metafor::rma(yi = dat$Hedges_g_exact, vi = dat$Hedges_g_variance, method = "REML"),
     error = function(err) err
   )
 
   if (inherits(fit, "error")) {
-    grDevices::dev.off()
-    write_placeholder_plot(path, title, c("Model fit failed.", fit$message))
-    message("Saved placeholder ", path)
+    describe_skip(etio, region_type, paste0("model fit failed: ", fit$message))
     return(invisible(NULL))
   }
 
+  grDevices::png(path, width = 800, height = 800)
   metafor::funnel(
     fit,
     level = c(90, 95, 99),
@@ -114,8 +121,11 @@ make_funnel_plot <- function(meta, etio, region_type, out_file) {
   message("Saved ", path)
 }
 
-purrr_like_loop <- seq_len(nrow(plot_specs))
-for (i in purrr_like_loop) {
+eligibility <- summarize_plot_eligibility(meta)
+message("Secondary-plot eligibility summary:")
+print(eligibility)
+
+for (i in seq_len(nrow(plot_specs))) {
   make_funnel_plot(meta, plot_specs$etio[i], plot_specs$region_type[i], plot_specs$filename[i])
 }
 

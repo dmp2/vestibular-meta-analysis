@@ -46,6 +46,12 @@ Rscript vestibular-meta-analysis/baujat_plots_master.R
 Rscript vestibular-meta-analysis/forest_plots_master.R
 ```
 
+Secondary-plot input policy:
+
+1. Historical [`mycode-11.24/output_with_g.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g.csv)
+2. Recomputed [`mycode-11.24/output_with_g_computed.csv`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/mycode-11.24/output_with_g_computed.csv)
+3. Hybrid reconciliation in [`meta_plot_helpers.R`](/c:/Users/dpado/Documents/git/vestibular_meta_analysis/vestibular-meta-analysis/meta_plot_helpers.R)
+
 ## Required R Packages
 
 - `metafor`
@@ -60,5 +66,6 @@ Rscript vestibular-meta-analysis/forest_plots_master.R
 ## Current Data Reality
 
 - Brain plots have the strongest evidence and are the most trustworthy runnable branch.
-- Funnel and Baujat are variance-limited and will produce placeholders for some groups with the current checked-in data.
-- Forest plots use rows that have `Hedges_g_exact`, `CI_lower`, and `CI_upper`, which is the strongest currently available forest-plot input.
+- Funnel and Baujat remain variance-limited and now skip ineligible groups instead of writing placeholders.
+- Forest plots use rows that have `Hedges_g_exact`, `CI_lower`, and `CI_upper`, so their eligibility is broader than funnel/Baujat eligibility.
+- The validator now reports which outputs should exist under the current hybrid secondary-plot rules.
